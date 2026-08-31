@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply bg-ink-50 text-ink-800 font-body antialiased;
+}
+
+h1, h2, h3, h4 {
+  @apply font-display text-navy-800;
+}
+
+::selection {
+  @apply bg-teal-200 text-navy-900;
+}
+
+/* Visible keyboard focus */
+:focus-visible {
+  outline: 2px solid #3fbea3;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #d7e0ee;
+  border-radius: 999px;
+}

@@ -1,0 +1,97 @@
+import { Routes, Route, Navigate } from 'react-router-dom'
+
+// Auth
+import Login from './pages/auth/Login.jsx'
+import Signup from './pages/auth/Signup.jsx'
+
+// Layouts
+import UserLayout from './layouts/UserLayout.jsx'
+import ProfessionalLayout from './layouts/ProfessionalLayout.jsx'
+import AdminLayout from './layouts/AdminLayout.jsx'
+
+// User portal
+import Dashboard from './pages/user/Dashboard.jsx'
+import CheckIn from './pages/user/CheckIn.jsx'
+import AssessmentResult from './pages/user/AssessmentResult.jsx'
+import FindProfessional from './pages/user/FindProfessional.jsx'
+import ProfessionalProfile from './pages/user/ProfessionalProfile.jsx'
+import BookConsultation from './pages/user/BookConsultation.jsx'
+import WellbeingJourney from './pages/user/WellbeingJourney.jsx'
+import MindoraAI from './pages/user/MindoraAI.jsx'
+import Resources from './pages/user/Resources.jsx'
+import UserAppointments from './pages/user/Appointments.jsx'
+import UserSettings from './pages/user/Settings.jsx'
+
+// Professional portal
+import ProfessionalDashboard from './pages/professional/Dashboard.jsx'
+import ReferralDetail from './pages/professional/ReferralDetail.jsx'
+import ClientView from './pages/professional/ClientView.jsx'
+import Clients from './pages/professional/Clients.jsx'
+import ProAppointments from './pages/professional/Appointments.jsx'
+import ProAssessments from './pages/professional/Assessments.jsx'
+import FollowUps from './pages/professional/FollowUps.jsx'
+import Reports from './pages/professional/Reports.jsx'
+import ProSettings from './pages/professional/Settings.jsx'
+
+// Admin portal
+import Overview from './pages/admin/Overview.jsx'
+import AdminUsers from './pages/admin/Users.jsx'
+import AdminProfessionals from './pages/admin/Professionals.jsx'
+import AdminReferrals from './pages/admin/Referrals.jsx'
+import Safety from './pages/admin/Safety.jsx'
+import Analytics from './pages/admin/Analytics.jsx'
+import Institutions from './pages/admin/Institutions.jsx'
+import AdminSettings from './pages/admin/Settings.jsx'
+
+export default function App() {
+  return (
+    <Routes>
+      {/* Auth */}
+      <Route path="/" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+
+      {/* User portal */}
+      <Route path="/app" element={<UserLayout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="check-in" element={<CheckIn />} />
+        <Route path="check-in/result" element={<AssessmentResult />} />
+        <Route path="find-a-professional" element={<FindProfessional />} />
+        <Route path="find-a-professional/:id" element={<ProfessionalProfile />} />
+        <Route path="book" element={<BookConsultation />} />
+        <Route path="wellbeing" element={<WellbeingJourney />} />
+        <Route path="mindora-ai" element={<MindoraAI />} />
+        <Route path="resources" element={<Resources />} />
+        <Route path="appointments" element={<UserAppointments />} />
+        <Route path="settings" element={<UserSettings />} />
+      </Route>
+
+      {/* Professional portal */}
+      <Route path="/pro" element={<ProfessionalLayout />}>
+        <Route index element={<ProfessionalDashboard />} />
+        <Route path="referrals" element={<ProfessionalDashboard />} />
+        <Route path="referrals/:id" element={<ReferralDetail />} />
+        <Route path="clients" element={<Clients />} />
+        <Route path="clients/view" element={<ClientView />} />
+        <Route path="appointments" element={<ProAppointments />} />
+        <Route path="assessments" element={<ProAssessments />} />
+        <Route path="follow-ups" element={<FollowUps />} />
+        <Route path="reports" element={<Reports />} />
+        <Route path="settings" element={<ProSettings />} />
+      </Route>
+
+      {/* Admin portal */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<Overview />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="professionals" element={<AdminProfessionals />} />
+        <Route path="referrals" element={<AdminReferrals />} />
+        <Route path="safety" element={<Safety />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="institutions" element={<Institutions />} />
+        <Route path="settings" element={<AdminSettings />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
