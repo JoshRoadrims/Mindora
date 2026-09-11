@@ -1,46 +1,67 @@
+import { useEffect, useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import PageHeader from '../../components/PageHeader.jsx'
 import Card from '../../components/Card.jsx'
-import BarChart from '../../components/BarChart.jsx'
-import { adminOverview } from '../../data/mockData.js'
-
-const stats = [
-  { label: 'Total users', value: adminOverview.totalUsers },
-  { label: 'Active users', value: adminOverview.activeUsers },
-  { label: 'Assessments completed', value: adminOverview.assessmentsCompleted },
-  { label: 'Referrals made', value: adminOverview.referralsMade },
-  { label: 'Professional network', value: adminOverview.professionalsOnNetwork },
-  { label: 'Institutional users', value: adminOverview.institutionalUsers },
-]
+import { api } from '../../data/api.js'
 
 export default function Overview() {
+  const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    api
+      .getAdminOverview()
+      .then((d) => !cancelled && setData(d))
+      .catch((err) => !cancelled && setError(err.message))
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
     <div>
       <PageHeader eyebrow="Overview" title="Mindora Platform Overview" />
 
       <div className="p-8 space-y-6 max-w-6xl">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {stats.map((s) => (
-            <Card key={s.label}>
-              <p className="text-2xl font-bold text-navy-800">{s.value.toLocaleString()}</p>
-              <p className="text-xs text-ink-500 mt-1">{s.label}</p>
-            </Card>
-          ))}
-        </div>
+        {error && (
+          <Card className="text-sm text-red-600">
+            Couldn't load platform stats: {error}
+          </Card>
+        )}
 
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card>
-            <h3 className="font-semibold text-navy-800 mb-4 text-sm">User growth</h3>
-            <BarChart data={adminOverview.userGrowth} color="#0f1e3d" />
+        {!data && !error && (
+          <Card className="flex items-center gap-2 text-ink-500 text-sm">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading platform stats...
           </Card>
-          <Card>
-            <h3 className="font-semibold text-navy-800 mb-4 text-sm">Assessment completion (%)</h3>
-            <BarChart data={adminOverview.assessmentCompletion} color="#3fbea3" />
-          </Card>
-          <Card>
-            <h3 className="font-semibold text-navy-800 mb-4 text-sm">Referral conversion (%)</h3>
-            <BarChart data={adminOverview.referralConversion} color="#4f70a9" />
-          </Card>
-        </div>
+        )}
+
+        {data && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card>
+              <p className="text-2xl font-bold text-navy-800">{data.totalUsers}</p>
+              <p className="text-xs text-ink-500 mt-1">Total users</p>
+            </Card>
+            <Card>
+              <p className="text-2xl font-bold text-navy-800">{data.assessmentsCompleted}</p>
+              <p className="text-xs text-ink-500 mt-1">Assessments completed</p>
+            </Card>
+            <Card>
+              <p className="text-2xl font-bold text-navy-800">{data.referralsMade}</p>
+              <p className="text-xs text-ink-500 mt-1">Referrals made</p>
+            </Card>
+            <Card>
+              <p className="text-2xl font-bold text-navy-800">{data.professionalsOnNetwork}</p>
+              <p className="text-xs text-ink-500 mt-1">Professional network</p>
+            </Card>
+          </div>
+        )}
+
+        <Card className="text-xs text-ink-400">
+          Growth/trend charts (user growth, assessment completion over time, referral
+          conversion) need time-series queries not yet built — these are the real,
+          current totals only. Ask me to add the trend endpoints when you want history.
+        </Card>
       </div>
     </div>
   )

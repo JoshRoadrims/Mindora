@@ -1,23 +1,31 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, Stethoscope, ShieldCheck } from 'lucide-react'
+import { User, Stethoscope, ShieldCheck, Loader2 } from 'lucide-react'
 import Button from '../../components/Button.jsx'
 import { useAppState } from '../../data/AppState.jsx'
 
 export default function Login() {
   const [audience, setAudience] = useState('user') // 'user' | 'professional'
+  const [email, setEmail] = useState('joshua@example.com')
+  const [password, setPassword] = useState('demo-password')
+  const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
-  const { setRole } = useAppState()
+  const { loginUser, loginProfessional, loginAdmin, authError } = useAppState()
 
-  const handleLogin = (e) => {
+  const handleAudienceChange = (next) => {
+    setAudience(next)
+    setEmail(next === 'user' ? 'joshua@example.com' : 'sarah.mwangi@example.com')
+  }
+
+  const handleLogin = async (e) => {
     e.preventDefault()
-    if (audience === 'user') {
-      setRole('user')
-      navigate('/app')
-    } else {
-      setRole('professional')
-      navigate('/pro')
-    }
+    setSubmitting(true)
+    const ok =
+      audience === 'user'
+        ? await loginUser(email, password)
+        : await loginProfessional(email, password)
+    setSubmitting(false)
+    if (ok) navigate(audience === 'user' ? '/app' : '/pro')
   }
 
   return (
@@ -66,7 +74,7 @@ export default function Login() {
 
           <div className="flex rounded-xl border border-ink-200 p-1 mb-6 bg-ink-50">
             <button
-              onClick={() => setAudience('user')}
+              onClick={() => handleAudienceChange('user')}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
                 audience === 'user' ? 'bg-white shadow-soft text-navy-800' : 'text-ink-500'
               }`}
@@ -74,7 +82,7 @@ export default function Login() {
               <User className="h-4 w-4" /> I'm a user
             </button>
             <button
-              onClick={() => setAudience('professional')}
+              onClick={() => handleAudienceChange('professional')}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
                 audience === 'professional'
                   ? 'bg-white shadow-soft text-navy-800'
@@ -90,7 +98,8 @@ export default function Login() {
               <label className="text-sm font-medium text-navy-700 mb-1 block">Email</label>
               <input
                 type="email"
-                defaultValue={audience === 'user' ? 'joshua@example.com' : 'sarah.mwangi@example.com'}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-xl border border-ink-200 px-4 py-3 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
               />
             </div>
@@ -98,14 +107,22 @@ export default function Login() {
               <label className="text-sm font-medium text-navy-700 mb-1 block">Password</label>
               <input
                 type="password"
-                defaultValue="demo-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-xl border border-ink-200 px-4 py-3 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
               />
             </div>
-            <Button type="submit" variant="accent" className="w-full">
-              Log in
+            {authError && <p className="text-sm text-red-600">{authError}</p>}
+            <Button type="submit" variant="accent" className="w-full" disabled={submitting}>
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Log in'}
             </Button>
           </form>
+
+          <p className="text-xs text-ink-400 mt-3">
+            Demo accounts (after running the backend seed script):
+            joshua@example.com / sarah.mwangi@example.com — password:{' '}
+            <span className="font-mono">demo-password</span>
+          </p>
 
           <div className="flex items-center gap-3 my-6">
             <div className="h-px bg-ink-100 flex-1" />
@@ -122,11 +139,14 @@ export default function Login() {
           </Button>
 
           <button
-            onClick={() => {
-              setRole('admin')
-              navigate('/admin')
+            onClick={async () => {
+              setSubmitting(true)
+              const ok = await loginAdmin('admin@mindora.local', 'demo-password')
+              setSubmitting(false)
+              if (ok) navigate('/admin')
             }}
             className="w-full text-center text-xs text-ink-400 hover:text-navy-600 mt-8"
+            disabled={submitting}
           >
             Mindora team member? Enter admin console →
           </button>
