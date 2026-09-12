@@ -71,7 +71,7 @@ export default function App() {
         <Route path="referrals" element={<ProfessionalDashboard />} />
         <Route path="referrals/:id" element={<ReferralDetail />} />
         <Route path="clients" element={<Clients />} />
-        <Route path="clients/view" element={<ClientView />} />
+        <Route path="clients/:userId" element={<ClientView />} />
         <Route path="appointments" element={<ProAppointments />} />
         <Route path="assessments" element={<ProAssessments />} />
         <Route path="follow-ups" element={<FollowUps />} />

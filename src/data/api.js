@@ -57,13 +57,18 @@ export const api = {
   getAdminOverview: () => request('/api/admin/overview'),
   getAdminSafety: () => request('/api/admin/safety'),
 
-  // ---professionals (directory) ---
+  // --- Professionals (directory) ---
   listProfessionals: () => request('/api/professionals'),
-  getProfessionals: (id) => request('/api/professionals/${id}'),
+  getProfessional: (id) => request(`/api/professionals/${id}`),
 
-  //---Appointments ---
+  // --- Appointments ---
   bookAppointment: (payload) => request('/api/appointments', { method: 'POST', body: payload }),
-  getMyAppointments: () => request('/api/appointsments/mine'),
-  getProffessionalAppointments: () => request('/api/appointments'),
+  getMyAppointments: () => request('/api/appointments/mine'),
+  getProfessionalAppointments: () => request('/api/appointments'),
 
+  // --- Clients (professional) ---
+  listClients: () => request('/api/clients'),
+  getClient: (userId) => request('/api/clients/${userID}'),
+  addClientNote: (userId, content) =>
+    request('/api/clients/${userId}/notes', {method: 'POST', body { content }}),
 }
