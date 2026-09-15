@@ -1,18 +1,27 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { User, Stethoscope, ArrowRight } from 'lucide-react'
+import { User, Stethoscope, ArrowRight, Loader2 } from 'lucide-react'
 import Button from '../../components/Button.jsx'
 import { useAppState } from '../../data/AppState.jsx'
 
 export default function Signup() {
   const [selected, setSelected] = useState('user')
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
-  const { setRole } = useAppState()
+  const { registerUser, registerProfessional, authError } = useAppState()
 
-  const handleCreate = (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault()
-    setRole(selected)
-    navigate(selected === 'user' ? '/app' : '/pro')
+    setSubmitting(true)
+    const ok =
+      selected === 'user'
+        ? await registerUser(fullName, email, password)
+        : await registerProfessional(fullName, email, password)
+    setSubmitting(false)
+    if (ok) navigate(selected === 'user' ? '/app' : '/pro')
   }
 
   return (
@@ -30,6 +39,7 @@ export default function Signup() {
 
         <div className="space-y-3 mb-6">
           <button
+            type="button"
             onClick={() => setSelected('user')}
             className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
               selected === 'user'
@@ -47,6 +57,7 @@ export default function Signup() {
           </button>
 
           <button
+            type="button"
             onClick={() => setSelected('professional')}
             className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
               selected === 'professional'
@@ -67,17 +78,37 @@ export default function Signup() {
         <form onSubmit={handleCreate} className="space-y-4">
           <input
             placeholder="Full name"
-            defaultValue="Joshua Otieno"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
             className="w-full rounded-xl border border-ink-200 px-4 py-3 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
           />
           <input
             placeholder="Email"
             type="email"
-            defaultValue="joshua@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
             className="w-full rounded-xl border border-ink-200 px-4 py-3 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
           />
-          <Button type="submit" variant="accent" className="w-full">
-            Create account <ArrowRight className="h-4 w-4" />
+          <input
+            placeholder="Password (min. 8 characters)"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={8}
+            required
+            className="w-full rounded-xl border border-ink-200 px-4 py-3 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+          />
+          {authError && <p className="text-sm text-red-600">{authError}</p>}
+          <Button type="submit" variant="accent" className="w-full" disabled={submitting}>
+            {submitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                Create account <ArrowRight className="h-4 w-4" />
+              </>
+            )}
           </Button>
         </form>
 

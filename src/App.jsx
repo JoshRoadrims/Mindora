@@ -43,6 +43,8 @@ import Analytics from './pages/admin/Analytics.jsx'
 import Institutions from './pages/admin/Institutions.jsx'
 import AdminSettings from './pages/admin/Settings.jsx'
 
+import RequireAuth from './components/RequireAuth.jsx'
+
 export default function App() {
   return (
     <Routes>
@@ -51,7 +53,7 @@ export default function App() {
       <Route path="/signup" element={<Signup />} />
 
       {/* User portal */}
-      <Route path="/app" element={<UserLayout />}>
+      <Route path="/app" element={<RequireAuth><UserLayout /></RequireAuth>}>
         <Route index element={<Dashboard />} />
         <Route path="check-in" element={<CheckIn />} />
         <Route path="check-in/result" element={<AssessmentResult />} />
@@ -66,7 +68,7 @@ export default function App() {
       </Route>
 
       {/* Professional portal */}
-      <Route path="/pro" element={<ProfessionalLayout />}>
+      <Route path="/pro" element={<RequireAuth><ProfessionalLayout /></RequireAuth>}>
         <Route index element={<ProfessionalDashboard />} />
         <Route path="referrals" element={<ProfessionalDashboard />} />
         <Route path="referrals/:id" element={<ReferralDetail />} />
@@ -80,7 +82,7 @@ export default function App() {
       </Route>
 
       {/* Admin portal */}
-      <Route path="/admin" element={<AdminLayout />}>
+      <Route path="/admin" element={<RequireAuth><AdminLayout /></RequireAuth>}>
         <Route index element={<Overview />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="professionals" element={<AdminProfessionals />} />

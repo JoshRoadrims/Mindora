@@ -26,8 +26,18 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
   const data = isJson ? await res.json() : null
 
   if (!res.ok) {
-    const message = data?.error?.formErrors?.join(', ') || data?.error || `Request failed (${res.status})`
-    throw new Error(typeof message === 'string' ? message : 'Request failed')
+    let message = `Request failed (${res.status})`
+    if (data?.error) {
+      if (typeof data.error === 'string') {
+        message = data.error
+      } else {
+        // zod's .flatten() shape: { formErrors: [...], fieldErrors: { field: [...] } }
+        const fieldMessages = Object.values(data.error.fieldErrors || {}).flat()
+        const combined = [...(data.error.formErrors || []), ...fieldMessages]
+        if (combined.length) message = combined.join(', ')
+      }
+    }
+    throw new Error(message)
   }
 
   return data
@@ -56,6 +66,9 @@ export const api = {
   // --- Admin ---
   getAdminOverview: () => request('/api/admin/overview'),
   getAdminSafety: () => request('/api/admin/safety'),
+  adminListProfessionals: () => request('/api/admin/professionals'),
+  adminSetProfessionalVerified: (id, verified) =>
+    request(`/api/admin/professionals/${id}/verify`, { method: 'PATCH', body: { verified } }),
 
   // --- Professionals (directory) ---
   listProfessionals: () => request('/api/professionals'),
@@ -68,7 +81,7 @@ export const api = {
 
   // --- Clients (professional) ---
   listClients: () => request('/api/clients'),
-  getClient: (userId) => request('/api/clients/${userID}'),
+  getClient: (userId) => request(`/api/clients/${userId}`),
   addClientNote: (userId, content) =>
-    request('/api/clients/${userId}/notes', {method: 'POST', body { content }}),
+    request(`/api/clients/${userId}/notes`, { method: 'POST', body: { content } }),
 }

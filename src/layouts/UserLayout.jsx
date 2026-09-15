@@ -10,6 +10,7 @@ import {
   Settings,
 } from 'lucide-react'
 import Sidebar from '../components/Sidebar.jsx'
+import { useAppState } from '../data/AppState.jsx'
 
 const items = [
   { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -23,9 +24,11 @@ const items = [
 ]
 
 export default function UserLayout() {
+  const { authUser } = useAppState()
+
   return (
     <div className="flex min-h-screen bg-ink-50">
-      <Sidebar items={items} roleLabel="Individual account" roleName="Joshua Otieno" />
+      <Sidebar items={items} roleLabel="Individual account" roleName={authUser?.fullName ?? 'Account'} />
       <main className="flex-1 min-w-0">
         <Outlet />
       </main>
