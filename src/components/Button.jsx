@@ -20,6 +20,14 @@ export default function Button({
   ...props
 }) {
   const cls = `${base} ${variants[variant]} ${className}`
+
+  if (as === 'a') {
+    return (
+      <a className={cls} {...props}>
+        {children}
+      </a>
+    )
+  }
   if (as === 'link' || to) {
     return (
       <Link to={to} className={cls} {...props}>

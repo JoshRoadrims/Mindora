@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { ShieldAlert, Clock, Loader2 } from 'lucide-react'
+import { ShieldAlert, Clock, Loader2, Check } from 'lucide-react'
 import PageHeader from '../../components/PageHeader.jsx'
 import Card from '../../components/Card.jsx'
 import Badge from '../../components/Badge.jsx'
+import Button from '../../components/Button.jsx'
 import { Disclaimer } from '../../components/Disclaimer.jsx'
 import { api } from '../../data/api.js'
 
@@ -25,17 +26,28 @@ function timeAgo(iso) {
 export default function Safety() {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
+  const [resolvingId, setResolvingId] = useState(null)
 
-  useEffect(() => {
-    let cancelled = false
+  const load = () => {
     api
       .getAdminSafety()
-      .then((d) => !cancelled && setData(d))
-      .catch((err) => !cancelled && setError(err.message))
-    return () => {
-      cancelled = true
+      .then(setData)
+      .catch((err) => setError(err.message))
+  }
+
+  useEffect(load, [])
+
+  const handleResolve = async (id) => {
+    setResolvingId(id)
+    try {
+      await api.resolveSafetyAlert(id)
+      load()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setResolvingId(null)
     }
-  }, [])
+  }
 
   return (
     <div>
@@ -46,7 +58,7 @@ export default function Safety() {
       />
 
       <div className="p-8 space-y-6 max-w-5xl">
-        {error && <Card className="text-sm text-red-600">Couldn't load safety data: {error}</Card>}
+        {error && <Card className="text-sm text-red-600">{error}</Card>}
 
         {!data && !error && (
           <Card className="flex items-center gap-2 text-ink-500 text-sm">
@@ -73,7 +85,7 @@ export default function Safety() {
 
               {data.alerts.length === 0 && (
                 <p className="text-sm text-ink-400 py-6 text-center">
-                  No pending referrals right now.
+                  No open alerts right now.
                 </p>
               )}
 
@@ -84,14 +96,28 @@ export default function Safety() {
                       <div className="flex items-center gap-2 mb-1">
                         <Badge tone={categoryMeta[a.level]?.tone ?? 'elevated'}>{a.level}</Badge>
                         <span className="text-sm font-semibold text-navy-800">
-                          #{a.id.slice(0, 8)}
+                          User #{a.userId.slice(0, 8)}
                         </span>
-                        <span className="text-xs text-ink-400">{a.status}</span>
                       </div>
                       <p className="text-sm text-ink-600">{a.note}</p>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-ink-400 shrink-0">
-                      <Clock className="h-3.5 w-3.5" /> {timeAgo(a.createdAt)}
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="flex items-center gap-1 text-xs text-ink-400">
+                        <Clock className="h-3.5 w-3.5" /> {timeAgo(a.createdAt)}
+                      </span>
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleResolve(a.id)}
+                        disabled={resolvingId === a.id}
+                      >
+                        {resolvingId === a.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Check className="h-4 w-4" /> Resolve
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
                 ))}

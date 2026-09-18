@@ -4,28 +4,47 @@ import {
   Users,
   Stethoscope,
   Inbox,
+  CalendarDays,
   ShieldAlert,
   BarChart3,
   Building2,
   Settings,
 } from 'lucide-react'
 import Sidebar from '../components/Sidebar.jsx'
+import { useAppState } from '../data/AppState.jsx'
 
-const items = [
-  { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
-  { to: '/admin/users', label: 'Users', icon: Users },
-  { to: '/admin/professionals', label: 'Professionals', icon: Stethoscope },
-  { to: '/admin/referrals', label: 'Referrals', icon: Inbox },
-  { to: '/admin/safety', label: 'Safety', icon: ShieldAlert },
-  { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-  { to: '/admin/institutions', label: 'Institutions', icon: Building2 },
-  { to: '/admin/settings', label: 'Settings', icon: Settings },
+// Every tab an admin could see; each entry lists which adminRoles can see it.
+// PLATFORM_ADMIN sees everything by design.
+const allItems = [
+  { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true, roles: ['PLATFORM_ADMIN', 'CLINICAL_SAFETY_REVIEWER', 'SUPPORT'] },
+  { to: '/admin/users', label: 'Users', icon: Users, roles: ['PLATFORM_ADMIN', 'SUPPORT'] },
+  { to: '/admin/professionals', label: 'Professionals', icon: Stethoscope, roles: ['PLATFORM_ADMIN', 'CLINICAL_SAFETY_REVIEWER'] },
+  { to: '/admin/referrals', label: 'Referrals', icon: Inbox, roles: ['PLATFORM_ADMIN', 'CLINICAL_SAFETY_REVIEWER'] },
+  { to: '/admin/appointments', label: 'Appointments', icon: CalendarDays, roles: ['PLATFORM_ADMIN', 'SUPPORT'] },
+  { to: '/admin/safety', label: 'Safety', icon: ShieldAlert, roles: ['PLATFORM_ADMIN', 'CLINICAL_SAFETY_REVIEWER'] },
+  { to: '/admin/analytics', label: 'Analytics', icon: BarChart3, roles: ['PLATFORM_ADMIN'] },
+  { to: '/admin/institutions', label: 'Institutions', icon: Building2, roles: ['PLATFORM_ADMIN'] },
+  { to: '/admin/settings', label: 'Settings', icon: Settings, roles: ['PLATFORM_ADMIN', 'CLINICAL_SAFETY_REVIEWER', 'SUPPORT'] },
 ]
 
+const roleLabels = {
+  PLATFORM_ADMIN: 'Platform admin',
+  CLINICAL_SAFETY_REVIEWER: 'Clinical safety reviewer',
+  SUPPORT: 'Support',
+}
+
 export default function AdminLayout() {
+  const { authUser } = useAppState()
+  const adminRole = authUser?.role
+  const items = allItems.filter((item) => !adminRole || item.roles.includes(adminRole))
+
   return (
     <div className="flex min-h-screen bg-ink-50">
-      <Sidebar items={items} roleLabel="Mindora admin" roleName="Platform team" />
+      <Sidebar
+        items={items}
+        roleLabel={roleLabels[adminRole] ?? 'Mindora admin'}
+        roleName={authUser?.fullName ?? 'Platform team'}
+      />
       <main className="flex-1 min-w-0">
         <Outlet />
       </main>

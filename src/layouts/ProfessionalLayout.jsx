@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import {
   LayoutDashboard,
@@ -8,9 +9,12 @@ import {
   Repeat,
   BarChart3,
   Settings,
+  Loader2,
 } from 'lucide-react'
 import Sidebar from '../components/Sidebar.jsx'
 import { useAppState } from '../data/AppState.jsx'
+import { api } from '../data/api.js'
+import AgreementAcceptance from '../pages/professional/AgreementAcceptance.jsx'
 
 const items = [
   { to: '/pro', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -25,6 +29,33 @@ const items = [
 
 export default function ProfessionalLayout() {
   const { authUser } = useAppState()
+  const [agreement, setAgreement] = useState(null) // null = loading
+  const [error, setError] = useState(null)
+
+  const checkAgreement = () => {
+    api
+      .getAgreementStatus()
+      .then(setAgreement)
+      .catch((err) => setError(err.message))
+  }
+
+  useEffect(checkAgreement, [])
+
+  if (error) {
+    return <div className="min-h-screen flex items-center justify-center text-sm text-red-600 p-8">{error}</div>
+  }
+
+  if (agreement === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center gap-2 text-ink-500 text-sm">
+        <Loader2 className="h-5 w-5 animate-spin" /> Loading...
+      </div>
+    )
+  }
+
+  if (!agreement.accepted) {
+    return <AgreementAcceptance currentVersion={agreement.currentVersion} onAccepted={checkAgreement} />
+  }
 
   return (
     <div className="flex min-h-screen bg-ink-50">

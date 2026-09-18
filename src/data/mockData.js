@@ -63,6 +63,11 @@ export const checkInQuestions = [
     domain: 'Emotional wellbeing',
     prompt: 'Feeling uncertain or discouraged about the days ahead.',
   },
+  {
+    id: 'selfharm',
+    domain: 'Emotional wellbeing',
+    prompt: 'Thoughts that you would be better off dead, or of hurting yourself in some way.',
+  },
 ]
 
 export const responseOptions = [

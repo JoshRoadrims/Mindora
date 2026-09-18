@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
-import { CalendarDays, Loader2, Video, MapPin } from 'lucide-react'
+import { CalendarDays, Loader2, Video, MapPin, Check, X, UserX } from 'lucide-react'
 import PageHeader from '../../components/PageHeader.jsx'
 import Card from '../../components/Card.jsx'
 import Badge from '../../components/Badge.jsx'
+import Button from '../../components/Button.jsx'
 import { api } from '../../data/api.js'
+
+const JOIN_WINDOW_BEFORE_MS = 10 * 60 * 1000 // 10 min before
+const JOIN_WINDOW_AFTER_MS = 60 * 60 * 1000 // 60 min after
 
 function formatDateTime(iso) {
   return new Date(iso).toLocaleString(undefined, {
@@ -15,20 +19,40 @@ function formatDateTime(iso) {
   })
 }
 
+// Enforces "strictly on the time slotted" — the Join button only appears
+// inside a real window around the booked time, not any time before/after.
+function canJoin(a) {
+  if (a.status !== 'SCHEDULED' || a.type !== 'ONLINE' || !a.meetingUrl) return false
+  const start = new Date(a.scheduledFor).getTime()
+  const now = Date.now()
+  return now >= start - JOIN_WINDOW_BEFORE_MS && now <= start + JOIN_WINDOW_AFTER_MS
+}
+
 export default function Appointments() {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
+  const [updatingId, setUpdatingId] = useState(null)
 
-  useEffect(() => {
-    let cancelled = false
+  const load = () => {
     api
       .getProfessionalAppointments()
-      .then((d) => !cancelled && setData(d))
-      .catch((err) => !cancelled && setError(err.message))
-    return () => {
-      cancelled = true
+      .then(setData)
+      .catch((err) => setError(err.message))
+  }
+
+  useEffect(load, [])
+
+  const handleStatus = async (id, status) => {
+    setUpdatingId(id)
+    try {
+      await api.updateAppointmentStatus(id, status)
+      load()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setUpdatingId(null)
     }
-  }, [])
+  }
 
   return (
     <div>
@@ -56,19 +80,65 @@ export default function Appointments() {
               )}
               <div className="space-y-3">
                 {data.upcoming.map((a) => (
-                  <Card key={a.id} className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-navy-800">{formatDateTime(a.scheduledFor)}</p>
-                      <p className="text-sm text-ink-500 flex items-center gap-1 mt-1">
-                        {a.type === 'ONLINE' ? (
-                          <Video className="h-3.5 w-3.5" />
-                        ) : (
-                          <MapPin className="h-3.5 w-3.5" />
-                        )}
-                        {a.type === 'ONLINE' ? 'Online' : 'In-person'} • KES {a.feeKes.toLocaleString()}
-                      </p>
+                  <Card key={a.id}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="font-semibold text-navy-800">{formatDateTime(a.scheduledFor)}</p>
+                        <p className="text-sm text-ink-500 flex items-center gap-1 mt-1">
+                          {a.type === 'ONLINE' ? (
+                            <Video className="h-3.5 w-3.5" />
+                          ) : (
+                            <MapPin className="h-3.5 w-3.5" />
+                          )}
+                          {a.type === 'ONLINE' ? 'Online' : 'In-person'} • KES {a.feeKes.toLocaleString()}
+                        </p>
+                      </div>
+                      <Badge tone={a.status === 'SCHEDULED' ? 'teal' : 'neutral'}>{a.status}</Badge>
                     </div>
-                    <Badge tone={a.status === 'SCHEDULED' ? 'teal' : 'neutral'}>{a.status}</Badge>
+
+                    {a.status === 'SCHEDULED' && (
+                      <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-ink-100">
+                        {a.type === 'ONLINE' &&
+                          (canJoin(a) ? (
+                            <Button
+                              as="a"
+                              href={a.meetingUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              variant="accent"
+                            >
+                              <Video className="h-4 w-4" /> Join meeting
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-ink-400 mr-2">
+                              Join link opens 10 min before the scheduled time
+                            </span>
+                          ))}
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleStatus(a.id, 'COMPLETED')}
+                          disabled={updatingId === a.id}
+                        >
+                          <Check className="h-4 w-4" /> Mark complete
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="text-amber-700"
+                          onClick={() => handleStatus(a.id, 'NO_SHOW')}
+                          disabled={updatingId === a.id}
+                        >
+                          <UserX className="h-4 w-4" /> No-show
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="text-red-600"
+                          onClick={() => handleStatus(a.id, 'CANCELLED')}
+                          disabled={updatingId === a.id}
+                        >
+                          <X className="h-4 w-4" /> Cancel
+                        </Button>
+                      </div>
+                    )}
                   </Card>
                 ))}
               </div>

@@ -38,6 +38,7 @@ import Overview from './pages/admin/Overview.jsx'
 import AdminUsers from './pages/admin/Users.jsx'
 import AdminProfessionals from './pages/admin/Professionals.jsx'
 import AdminReferrals from './pages/admin/Referrals.jsx'
+import AdminAppointments from './pages/admin/Appointments.jsx'
 import Safety from './pages/admin/Safety.jsx'
 import Analytics from './pages/admin/Analytics.jsx'
 import Institutions from './pages/admin/Institutions.jsx'
@@ -87,6 +88,7 @@ export default function App() {
         <Route path="users" element={<AdminUsers />} />
         <Route path="professionals" element={<AdminProfessionals />} />
         <Route path="referrals" element={<AdminReferrals />} />
+        <Route path="appointments" element={<AdminAppointments />} />
         <Route path="safety" element={<Safety />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="institutions" element={<Institutions />} />
