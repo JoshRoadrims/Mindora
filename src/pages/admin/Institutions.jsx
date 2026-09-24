@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Loader2, Building2, Plus } from 'lucide-react'
+import { Loader2, Building2, Plus, Copy, Check, BarChart3 } from 'lucide-react'
 import PageHeader from '../../components/PageHeader.jsx'
 import Card from '../../components/Card.jsx'
 import Badge from '../../components/Badge.jsx'
@@ -20,7 +20,7 @@ function statusTone(status) {
   return 'elevated' // PENDING
 }
 
-const emptyForm = { name: '', type: 'EMPLOYER', contactName: '', contactEmail: '', notes: '' }
+const emptyForm = { name: '', type: 'EMPLOYER', contactName: '', contactEmail: '', notes: '', coveragePercent: 0 }
 
 export default function Institutions() {
   const [institutions, setInstitutions] = useState(null)
@@ -28,6 +28,9 @@ export default function Institutions() {
   const [form, setForm] = useState(emptyForm)
   const [submitting, setSubmitting] = useState(false)
   const [updatingId, setUpdatingId] = useState(null)
+  const [copiedId, setCopiedId] = useState(null)
+  const [statsById, setStatsById] = useState({})
+  const [loadingStatsId, setLoadingStatsId] = useState(null)
 
   const load = () => {
     api.adminListInstitutions().then(setInstitutions).catch((err) => setError(err.message))
@@ -67,12 +70,42 @@ export default function Institutions() {
     }
   }
 
+  const handleCoverageChange = async (id, coveragePercent) => {
+    setUpdatingId(id)
+    try {
+      await api.adminUpdateInstitution(id, { coveragePercent })
+      load()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  const handleCopyCode = (id, code) => {
+    navigator.clipboard.writeText(code)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  const handleLoadStats = async (id) => {
+    setLoadingStatsId(id)
+    try {
+      const stats = await api.adminGetInstitutionStats(id)
+      setStatsById((prev) => ({ ...prev, [id]: stats }))
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoadingStatsId(null)
+    }
+  }
+
   return (
     <div>
       <PageHeader
         eyebrow="Institutions"
         title="Institutional partners"
-        subtitle="Employers, universities, healthcare providers, and insurers. Currently a partner directory — no institution-linked user accounts exist yet, that's a product decision for once a real pilot is being designed."
+        subtitle="Coverage percent determines how much of a professional's fee this institution pays for its linked members. Stats are always aggregate — Mindora never shows which specific patients used the benefit, matching how real Employee Assistance Programs guarantee anonymity."
       />
 
       <div className="p-8 space-y-6 max-w-4xl">
@@ -97,6 +130,19 @@ export default function Institutions() {
                 </option>
               ))}
             </select>
+            <div>
+              <label className="text-xs text-ink-500 block mb-1">
+                Coverage % (0 = no coverage, 100 = fully sponsored / EAP)
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={form.coveragePercent}
+                onChange={(e) => setForm({ ...form, coveragePercent: Number(e.target.value) })}
+                className="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+              />
+            </div>
             <input
               placeholder="Contact name (optional)"
               value={form.contactName}
@@ -114,7 +160,7 @@ export default function Institutions() {
               placeholder="Notes (optional)"
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              className="rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+              className="rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none md:col-span-2"
             />
             <Button type="submit" variant="accent" disabled={submitting} className="md:col-span-2 self-start">
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
@@ -133,41 +179,109 @@ export default function Institutions() {
 
         <div className="space-y-3">
           {institutions?.map((inst) => (
-            <Card key={inst.id} className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Building2 className="h-4 w-4 text-navy-500 shrink-0" />
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-semibold text-navy-800">{inst.name}</p>
-                    <Badge tone={statusTone(inst.status)}>{inst.status}</Badge>
+            <Card key={inst.id}>
+              <div className="flex items-center justify-between gap-4 mb-3">
+                <div className="flex items-center gap-3">
+                  <Building2 className="h-4 w-4 text-navy-500 shrink-0" />
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold text-navy-800">{inst.name}</p>
+                      <Badge tone={statusTone(inst.status)}>{inst.status}</Badge>
+                    </div>
+                    <p className="text-sm text-ink-500">{typeLabels[inst.type] ?? inst.type}</p>
+                    {(inst.contactName || inst.contactEmail) && (
+                      <p className="text-xs text-ink-400 mt-1">
+                        {[inst.contactName, inst.contactEmail].filter(Boolean).join(' • ')}
+                      </p>
+                    )}
                   </div>
-                  <p className="text-sm text-ink-500">{typeLabels[inst.type] ?? inst.type}</p>
-                  {(inst.contactName || inst.contactEmail) && (
-                    <p className="text-xs text-ink-400 mt-1">
-                      {[inst.contactName, inst.contactEmail].filter(Boolean).join(' • ')}
-                    </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {inst.status !== 'ACTIVE' && (
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleStatusChange(inst.id, 'ACTIVE')}
+                      disabled={updatingId === inst.id}
+                    >
+                      Activate
+                    </Button>
+                  )}
+                  {inst.status !== 'INACTIVE' && (
+                    <Button
+                      variant="ghost"
+                      className="text-ink-500"
+                      onClick={() => handleStatusChange(inst.id, 'INACTIVE')}
+                      disabled={updatingId === inst.id}
+                    >
+                      Deactivate
+                    </Button>
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {inst.status !== 'ACTIVE' && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => handleStatusChange(inst.id, 'ACTIVE')}
-                    disabled={updatingId === inst.id}
-                  >
-                    Activate
+
+              <div className="grid md:grid-cols-2 gap-3 pt-3 border-t border-ink-100">
+                <div>
+                  <label className="text-xs text-ink-500 block mb-1">Coverage %</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      defaultValue={inst.coveragePercent}
+                      onBlur={(e) => {
+                        const val = Number(e.target.value)
+                        if (val !== inst.coveragePercent) handleCoverageChange(inst.id, val)
+                      }}
+                      className="w-24 rounded-lg border border-ink-200 px-3 py-1.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+                    />
+                    <span className="text-xs text-ink-400">% of fee covered per booking</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs text-ink-500 block mb-1">Enrollment code</label>
+                  <div className="flex items-center gap-2">
+                    <code className="rounded-lg bg-ink-50 px-3 py-1.5 text-sm font-mono text-navy-800">
+                      {inst.enrollmentCode}
+                    </code>
+                    <button
+                      onClick={() => handleCopyCode(inst.id, inst.enrollmentCode)}
+                      className="text-teal-600 hover:text-teal-700"
+                      aria-label="Copy enrollment code"
+                    >
+                      {copiedId === inst.id ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 mt-3 border-t border-ink-100">
+                {!statsById[inst.id] ? (
+                  <Button variant="ghost" onClick={() => handleLoadStats(inst.id)} disabled={loadingStatsId === inst.id}>
+                    {loadingStatsId === inst.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <BarChart3 className="h-4 w-4" />
+                    )}
+                    View usage stats
                   </Button>
-                )}
-                {inst.status !== 'INACTIVE' && (
-                  <Button
-                    variant="ghost"
-                    className="text-ink-500"
-                    onClick={() => handleStatusChange(inst.id, 'INACTIVE')}
-                    disabled={updatingId === inst.id}
-                  >
-                    Deactivate
-                  </Button>
+                ) : (
+                  <div className="flex flex-wrap gap-6 text-sm">
+                    <div>
+                      <p className="text-xs text-ink-500">Linked members</p>
+                      <p className="font-semibold text-navy-800">{statsById[inst.id].memberCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-ink-500">Sponsored appointments</p>
+                      <p className="font-semibold text-navy-800">{statsById[inst.id].sponsoredAppointmentCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-ink-500">Total covered</p>
+                      <p className="font-semibold text-navy-800">
+                        KES {statsById[inst.id].totalCoveredKes.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
                 )}
               </div>
             </Card>

@@ -159,6 +159,10 @@ export const api = {
   getAgreementStatus: () => request('/api/professionals/agreement/status'),
   acceptAgreement: () => request('/api/professionals/agreement/accept', { method: 'POST' }),
 
+  // --- Professional self-profile ---
+  getMyProfile: () => request('/api/professionals/me/profile'),
+  updateMyProfile: (payload) => request('/api/professionals/me/profile', { method: 'PATCH', body: payload }),
+
   // --- Appointments ---
   bookAppointment: (payload) => request('/api/appointments', { method: 'POST', body: payload }),
   getMyAppointments: () => request('/api/appointments/mine'),
@@ -180,18 +184,34 @@ export const api = {
     request(`/api/documents/${id}/review`, { method: 'PATCH', body: { status, reviewNotes } }),
   getDocumentFileBlob: (id) => fetchFileBlob(`/api/documents/${id}/file`),
 
-  // --- Institutions ---
+  // --- Institutions (admin) ---
   adminListInstitutions: () => request('/api/institutions'),
   adminCreateInstitution: (payload) => request('/api/institutions', { method: 'POST', body: payload }),
   adminUpdateInstitution: (id, payload) =>
     request(`/api/institutions/${id}`, { method: 'PATCH', body: payload }),
+  adminGetInstitutionStats: (id) => request(`/api/institutions/${id}/stats`),
 
   // --- Mindora AI ---
   sendAiMessage: (messages) => request('/api/ai/chat', { method: 'POST', body: { messages } }),
 
-  // --- Account (consent / deletion / export) ---
+  // --- Account (consent / deletion / export / institution enrollment) ---
   requestAccountDeletion: (reason) =>
     request('/api/account/deletion-request', { method: 'POST', body: { reason } }),
   getMyDeletionRequest: () => request('/api/account/deletion-request/mine'),
   exportMyData: () => request('/api/account/export'),
+  enrollInInstitution: (enrollmentCode) =>
+    request('/api/account/enroll', { method: 'POST', body: { enrollmentCode } }),
+  getMyInstitution: () => request('/api/account/institution'),
+
+  // --- Reviews ---
+  submitReview: (appointmentId, rating, comment) =>
+    request('/api/reviews', { method: 'POST', body: { appointmentId, rating, comment } }),
+  getProfessionalReviews: (professionalId) => request(`/api/reviews/professional/${professionalId}`),
+  getMyReviewForAppointment: (appointmentId) => request(`/api/reviews/appointment/${appointmentId}`),
+
+  // --- Messages ---
+  getConversations: () => request('/api/messages/conversations'),
+  getMessageThread: (otherPartyId) => request(`/api/messages/thread/${otherPartyId}`),
+  sendMessage: (otherPartyId, content) =>
+    request('/api/messages', { method: 'POST', body: { otherPartyId, content } }),
 }

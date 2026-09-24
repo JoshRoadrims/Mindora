@@ -8,13 +8,12 @@ import {
   ShieldAlert,
   BarChart3,
   Building2,
+  UserX,
   Settings,
 } from 'lucide-react'
 import Sidebar from '../components/Sidebar.jsx'
 import { useAppState } from '../data/AppState.jsx'
 
-// Every tab an admin could see; each entry lists which adminRoles can see it.
-// PLATFORM_ADMIN sees everything by design.
 const allItems = [
   { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true, roles: ['PLATFORM_ADMIN', 'CLINICAL_SAFETY_REVIEWER', 'SUPPORT'] },
   { to: '/admin/users', label: 'Users', icon: Users, roles: ['PLATFORM_ADMIN', 'SUPPORT'] },
@@ -24,6 +23,7 @@ const allItems = [
   { to: '/admin/safety', label: 'Safety', icon: ShieldAlert, roles: ['PLATFORM_ADMIN', 'CLINICAL_SAFETY_REVIEWER'] },
   { to: '/admin/analytics', label: 'Analytics', icon: BarChart3, roles: ['PLATFORM_ADMIN'] },
   { to: '/admin/institutions', label: 'Institutions', icon: Building2, roles: ['PLATFORM_ADMIN'] },
+  { to: '/admin/deletion-requests', label: 'Deletion Requests', icon: UserX, roles: ['PLATFORM_ADMIN'] },
   { to: '/admin/settings', label: 'Settings', icon: Settings, roles: ['PLATFORM_ADMIN', 'CLINICAL_SAFETY_REVIEWER', 'SUPPORT'] },
 ]
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ShieldCheck, Languages, Briefcase, MapPin, Loader2 } from 'lucide-react'
+import { ShieldCheck, Languages, Briefcase, MapPin, Loader2, Star } from 'lucide-react'
 import PageHeader from '../../components/PageHeader.jsx'
 import Card from '../../components/Card.jsx'
 import Badge from '../../components/Badge.jsx'
@@ -21,12 +21,26 @@ function modeLabel(p) {
   return 'Not specified'
 }
 
+function Stars({ value }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          className={`h-4 w-4 ${n <= Math.round(value) ? 'fill-amber-400 text-amber-400' : 'text-ink-200'}`}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default function ProfessionalProfile() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { setSelectedProfessional } = useAppState()
   const [professional, setProfessional] = useState(null)
   const [error, setError] = useState(null)
+  const [reviewData, setReviewData] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -34,6 +48,10 @@ export default function ProfessionalProfile() {
       .getProfessional(id)
       .then((data) => !cancelled && setProfessional(data))
       .catch((err) => !cancelled && setError(err.message))
+    api
+      .getProfessionalReviews(id)
+      .then((data) => !cancelled && setReviewData(data))
+      .catch(() => {})
     return () => {
       cancelled = true
     }
@@ -74,11 +92,19 @@ export default function ProfessionalProfile() {
       <div className="p-8 grid lg:grid-cols-3 gap-6 max-w-5xl">
         <div className="lg:col-span-2 space-y-6">
           <Card>
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
               {professional.verified && (
                 <Badge tone="teal">
                   <ShieldCheck className="h-3.5 w-3.5" /> Verified professional
                 </Badge>
+              )}
+              {reviewData && reviewData.count > 0 && (
+                <div className="flex items-center gap-2">
+                  <Stars value={reviewData.average} />
+                  <span className="text-sm text-ink-600">
+                    {reviewData.average.toFixed(1)} ({reviewData.count} review{reviewData.count === 1 ? '' : 's'})
+                  </span>
+                </div>
               )}
             </div>
             <h3 className="font-semibold text-navy-800 mb-2">Biography</h3>
@@ -108,6 +134,28 @@ export default function ProfessionalProfile() {
               </>
             )}
           </Card>
+
+          {reviewData && reviewData.reviews.length > 0 && (
+            <Card>
+              <h3 className="font-semibold text-navy-800 mb-4">Patient reviews</h3>
+              <p className="text-xs text-ink-400 mb-4">
+                Reviews are shown anonymously to protect patient privacy.
+              </p>
+              <div className="space-y-4">
+                {reviewData.reviews.map((r) => (
+                  <div key={r.id} className="border-b border-ink-100 last:border-0 pb-4 last:pb-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <Stars value={r.rating} />
+                      <span className="text-xs text-ink-400">
+                        {new Date(r.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {r.comment && <p className="text-sm text-ink-600">{r.comment}</p>}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
 
         <div>

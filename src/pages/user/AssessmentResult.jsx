@@ -24,7 +24,7 @@ export default function AssessmentResult() {
     case 'HIGH':
       return <HighRisk />
     case 'ELEVATED':
-      return <ElevatedRisk />
+      return <ElevatedRisk substanceFlag={lastResult.substanceFlag} />
     default:
       return <LowConcern />
   }
@@ -69,10 +69,17 @@ function LowConcern() {
   )
 }
 
-function ElevatedRisk() {
+function ElevatedRisk({ substanceFlag }) {
   return (
     <div>
-      <PageHeader eyebrow="Wellbeing check-in" title="Your results suggest additional support may help." />
+      <PageHeader
+        eyebrow="Wellbeing check-in"
+        title={
+          substanceFlag
+            ? 'Your results suggest support around alcohol or drug use may help.'
+            : 'Your results suggest additional support may help.'
+        }
+      />
       <div className="p-8 max-w-2xl mx-auto space-y-6">
         <Card className="text-center py-10 border-amber-200">
           <div className="mx-auto h-14 w-14 rounded-full bg-amber-50 flex items-center justify-center mb-4">
@@ -80,19 +87,33 @@ function ElevatedRisk() {
           </div>
           <Badge tone="elevated" className="mb-3">ELEVATED CONCERN</Badge>
           <p className="text-ink-600 text-sm max-w-md mx-auto">
-            Some of your responses indicate that speaking with a qualified mental-health
-            professional may be appropriate.
+            {substanceFlag
+              ? 'Your responses indicate a concern related to alcohol or drug use. Reaching out for support is a strong step, and there is no judgment here.'
+              : 'Some of your responses indicate that speaking with a qualified mental-health professional may be appropriate.'}
           </p>
         </Card>
+
+        {substanceFlag && (
+          <Disclaimer>
+            NACADA's free, confidential helpline offers 24-hour support specifically for alcohol
+            and drug use — counseling and referrals to treatment, day or night:{' '}
+            <a href="tel:1192" className="underline font-semibold">
+              1192
+            </a>
+            .
+          </Disclaimer>
+        )}
 
         <Card>
           <h3 className="font-semibold text-navy-800 mb-2">Recommended next step</h3>
           <p className="text-sm text-ink-600 mb-4">
-            A psychologist is generally the right starting point for this level of concern.
+            {substanceFlag
+              ? 'Some Mindora professionals focus specifically on addiction support — connecting with one can help you build a plan that works for you.'
+              : 'A psychologist is generally the right starting point for this level of concern.'}
           </p>
           <div className="flex flex-wrap gap-3">
             <Button as="link" to="/app/find-a-professional" variant="accent">
-              Find a psychologist
+              {substanceFlag ? 'Find a professional' : 'Find a psychologist'}
             </Button>
             <Button as="link" to="/app/resources" variant="secondary">
               Learn more

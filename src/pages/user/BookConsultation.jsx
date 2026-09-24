@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle2, Video, MapPin, Loader2 } from 'lucide-react'
+import { CheckCircle2, Video, MapPin, Loader2, Building2 } from 'lucide-react'
 import PageHeader from '../../components/PageHeader.jsx'
 import Card from '../../components/Card.jsx'
 import Button from '../../components/Button.jsx'
@@ -24,11 +24,24 @@ export default function BookConsultation() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [confirmed, setConfirmed] = useState(null)
+  const [institution, setInstitution] = useState(undefined) // undefined = loading, null = none
+
+  useEffect(() => {
+    api
+      .getMyInstitution()
+      .then(setInstitution)
+      .catch(() => setInstitution(null))
+  }, [])
 
   if (!selectedProfessional) {
     navigate('/app/find-a-professional')
     return null
   }
+
+  const fullFee = selectedProfessional.feeKes ?? 0
+  const hasCoverage = institution && institution.status === 'ACTIVE' && institution.coveragePercent > 0
+  const coveredKes = hasCoverage ? Math.min(fullFee, Math.round((fullFee * institution.coveragePercent) / 100)) : 0
+  const patientPaysKes = fullFee - coveredKes
 
   const handleConfirm = async () => {
     setSubmitting(true)
@@ -48,6 +61,7 @@ export default function BookConsultation() {
   }
 
   if (confirmed) {
+    const confirmedPatientPays = confirmed.feeKes - (confirmed.institutionCoveredKes ?? 0)
     return (
       <div>
         <PageHeader eyebrow="Booking confirmed" title="You're all set" />
@@ -57,10 +71,16 @@ export default function BookConsultation() {
               <CheckCircle2 className="h-7 w-7 text-teal-600" />
             </div>
             <h2 className="text-xl font-bold text-navy-800 mb-2">Consultation booked</h2>
-            <p className="text-sm text-ink-500 mb-6">
+            <p className="text-sm text-ink-500 mb-2">
               {selectedProfessional.fullName} •{' '}
               {new Date(confirmed.scheduledFor).toLocaleString()} • {confirmed.type}
             </p>
+            {confirmed.institutionCoveredKes > 0 && (
+              <p className="text-xs text-teal-600 mb-6">
+                KES {confirmed.institutionCoveredKes.toLocaleString()} covered by your institution
+                — you paid KES {confirmedPatientPays.toLocaleString()}
+              </p>
+            )}
             <Button as="link" to="/app/appointments" variant="accent">
               View my appointments
             </Button>
@@ -118,16 +138,32 @@ export default function BookConsultation() {
           </div>
         </Card>
 
-        <Card className="flex items-center justify-between">
-          <div>
-            <p className="text-xs text-ink-500">Consultation fee</p>
-            <p className="text-xl font-bold text-navy-800">
-              {selectedProfessional.feeKes ? `KES ${selectedProfessional.feeKes.toLocaleString()}` : 'Not listed'}
-            </p>
+        <Card>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-ink-500">Consultation fee</p>
+              {hasCoverage ? (
+                <>
+                  <p className="text-sm text-ink-400 line-through">KES {fullFee.toLocaleString()}</p>
+                  <p className="text-xl font-bold text-navy-800">KES {patientPaysKes.toLocaleString()}</p>
+                </>
+              ) : (
+                <p className="text-xl font-bold text-navy-800">
+                  {fullFee ? `KES ${fullFee.toLocaleString()}` : 'Not listed'}
+                </p>
+              )}
+            </div>
+            <Button variant="accent" onClick={handleConfirm} disabled={submitting}>
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirm booking'}
+            </Button>
           </div>
-          <Button variant="accent" onClick={handleConfirm} disabled={submitting}>
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirm booking'}
-          </Button>
+
+          {hasCoverage && (
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-ink-100 text-xs text-teal-700">
+              <Building2 className="h-3.5 w-3.5" />
+              KES {coveredKes.toLocaleString()} covered by {institution.name} ({institution.coveragePercent}%)
+            </div>
+          )}
         </Card>
 
         {error && <p className="text-sm text-red-600 text-center">{error}</p>}

@@ -17,6 +17,12 @@ function shortDate(iso) {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
+const tierLabels = {
+  standard: 'Standard (self-pay)',
+  student: 'Student discount',
+  corporate: 'Corporate (EAP)',
+}
+
 export default function Analytics() {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
@@ -60,6 +66,32 @@ export default function Analytics() {
                 color="#3fbea3"
               />
             </Card>
+
+            {data.tierBreakdown && (
+              <Card>
+                <h3 className="font-semibold text-navy-800 mb-4 text-sm">
+                  Bookings and patient-paid revenue by pricing tier
+                </h3>
+                <div className="grid md:grid-cols-3 gap-4">
+                  {Object.entries(data.tierBreakdown).map(([tier, stats]) => (
+                    <div key={tier} className="rounded-xl border border-ink-100 p-4">
+                      <p className="text-xs text-ink-500 mb-1">{tierLabels[tier] ?? tier}</p>
+                      <p className="text-2xl font-bold text-navy-800">{stats.count}</p>
+                      <p className="text-xs text-ink-400">bookings</p>
+                      <p className="text-sm font-semibold text-teal-700 mt-2">
+                        KES {stats.revenueKes.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-ink-400">paid by patients</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-ink-400 mt-3">
+                  "Paid by patients" excludes whatever an institution covered — corporate/EAP
+                  bookings show near-zero here even when the professional's full fee was earned,
+                  since the employer covers that portion.
+                </p>
+              </Card>
+            )}
 
             <div className="grid md:grid-cols-2 gap-6">
               <Card>

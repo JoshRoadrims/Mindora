@@ -20,6 +20,7 @@ import WellbeingJourney from './pages/user/WellbeingJourney.jsx'
 import MindoraAI from './pages/user/MindoraAI.jsx'
 import Resources from './pages/user/Resources.jsx'
 import UserAppointments from './pages/user/Appointments.jsx'
+import UserMessages from './pages/user/Messages.jsx'
 import UserSettings from './pages/user/Settings.jsx'
 
 // Professional portal
@@ -28,6 +29,7 @@ import ReferralDetail from './pages/professional/ReferralDetail.jsx'
 import ClientView from './pages/professional/ClientView.jsx'
 import Clients from './pages/professional/Clients.jsx'
 import ProAppointments from './pages/professional/Appointments.jsx'
+import ProMessages from './pages/professional/Messages.jsx'
 import ProAssessments from './pages/professional/Assessments.jsx'
 import FollowUps from './pages/professional/FollowUps.jsx'
 import Reports from './pages/professional/Reports.jsx'
@@ -42,6 +44,7 @@ import AdminAppointments from './pages/admin/Appointments.jsx'
 import Safety from './pages/admin/Safety.jsx'
 import Analytics from './pages/admin/Analytics.jsx'
 import Institutions from './pages/admin/Institutions.jsx'
+import DeletionRequests from './pages/admin/DeletionRequests.jsx'
 import AdminSettings from './pages/admin/Settings.jsx'
 
 import RequireAuth from './components/RequireAuth.jsx'
@@ -65,6 +68,7 @@ export default function App() {
         <Route path="mindora-ai" element={<MindoraAI />} />
         <Route path="resources" element={<Resources />} />
         <Route path="appointments" element={<UserAppointments />} />
+        <Route path="messages" element={<UserMessages />} />
         <Route path="settings" element={<UserSettings />} />
       </Route>
 
@@ -76,6 +80,7 @@ export default function App() {
         <Route path="clients" element={<Clients />} />
         <Route path="clients/:userId" element={<ClientView />} />
         <Route path="appointments" element={<ProAppointments />} />
+        <Route path="messages" element={<ProMessages />} />
         <Route path="assessments" element={<ProAssessments />} />
         <Route path="follow-ups" element={<FollowUps />} />
         <Route path="reports" element={<Reports />} />
@@ -92,6 +97,7 @@ export default function App() {
         <Route path="safety" element={<Safety />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="institutions" element={<Institutions />} />
+        <Route path="deletion-requests" element={<DeletionRequests />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 

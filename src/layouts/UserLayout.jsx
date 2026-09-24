@@ -7,6 +7,7 @@ import {
   CalendarDays,
   BookOpen,
   Sparkles,
+  MessageCircle,
   Settings,
 } from 'lucide-react'
 import Sidebar from '../components/Sidebar.jsx'
@@ -18,6 +19,7 @@ const items = [
   { to: '/app/wellbeing', label: 'My wellbeing', icon: LineChart },
   { to: '/app/find-a-professional', label: 'Find a professional', icon: Search },
   { to: '/app/appointments', label: 'Appointments', icon: CalendarDays },
+  { to: '/app/messages', label: 'Messages', icon: MessageCircle },
   { to: '/app/resources', label: 'Resources', icon: BookOpen },
   { to: '/app/mindora-ai', label: 'Mindora AI', icon: Sparkles },
   { to: '/app/settings', label: 'Settings', icon: Settings },

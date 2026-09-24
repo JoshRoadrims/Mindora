@@ -9,6 +9,7 @@ export default function Signup() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [consent, setConsent] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
   const { registerUser, registerProfessional, authError } = useAppState()
@@ -18,7 +19,7 @@ export default function Signup() {
     setSubmitting(true)
     const ok =
       selected === 'user'
-        ? await registerUser(fullName, email, password)
+        ? await registerUser(fullName, email, password, consent)
         : await registerProfessional(fullName, email, password)
     setSubmitting(false)
     if (ok) navigate(selected === 'user' ? '/app' : '/pro')
@@ -100,6 +101,24 @@ export default function Signup() {
             required
             className="w-full rounded-xl border border-ink-200 px-4 py-3 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
           />
+
+          {selected === 'user' && (
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                required
+                className="mt-1"
+              />
+              <span className="text-xs text-ink-600">
+                I understand that my wellbeing check-in responses are sensitive health
+                information, and I consent to Mindora processing this data to provide
+                screening, referrals, and support.
+              </span>
+            </label>
+          )}
+
           {authError && <p className="text-sm text-red-600">{authError}</p>}
           <Button type="submit" variant="accent" className="w-full" disabled={submitting}>
             {submitting ? (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Loader2, Video, MapPin } from 'lucide-react'
+import { Loader2, Video, MapPin, Star } from 'lucide-react'
 import PageHeader from '../../components/PageHeader.jsx'
 import Card from '../../components/Card.jsx'
 import Badge from '../../components/Badge.jsx'
@@ -24,6 +24,85 @@ function canJoin(a) {
   const start = new Date(a.scheduledFor).getTime()
   const now = Date.now()
   return now >= start - JOIN_WINDOW_BEFORE_MS && now <= start + JOIN_WINDOW_AFTER_MS
+}
+
+function StarPicker({ value, onChange }) {
+  return (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button key={n} type="button" onClick={() => onChange(n)} aria-label={`${n} stars`}>
+          <Star className={`h-6 w-6 ${n <= value ? 'fill-amber-400 text-amber-400' : 'text-ink-200'}`} />
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function ReviewSection({ appointmentId }) {
+  const [existingReview, setExistingReview] = useState(undefined) // undefined = loading
+  const [rating, setRating] = useState(0)
+  const [comment, setComment] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    api
+      .getMyReviewForAppointment(appointmentId)
+      .then(setExistingReview)
+      .catch(() => setExistingReview(null))
+  }, [appointmentId])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (rating === 0) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      const review = await api.submitReview(appointmentId, rating, comment || undefined)
+      setExistingReview(review)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (existingReview === undefined) return null
+
+  if (existingReview) {
+    return (
+      <div className="pt-3 border-t border-ink-100">
+        <p className="text-xs text-ink-500 mb-1">Your review</p>
+        <div className="flex items-center gap-1 mb-1">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <Star
+              key={n}
+              className={`h-4 w-4 ${n <= existingReview.rating ? 'fill-amber-400 text-amber-400' : 'text-ink-200'}`}
+            />
+          ))}
+        </div>
+        {existingReview.comment && <p className="text-sm text-ink-600">{existingReview.comment}</p>}
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="pt-3 border-t border-ink-100 space-y-2">
+      <p className="text-xs text-ink-500">Leave a review (shown anonymously)</p>
+      <StarPicker value={rating} onChange={setRating} />
+      <textarea
+        placeholder="Optional comment"
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        rows={2}
+        className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+      />
+      {error && <p className="text-xs text-red-600">{error}</p>}
+      <Button type="submit" variant="secondary" disabled={rating === 0 || submitting}>
+        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit review'}
+      </Button>
+    </form>
+  )
 }
 
 export default function Appointments() {
@@ -90,6 +169,8 @@ export default function Appointments() {
                 )}
               </div>
             )}
+
+            {a.status === 'COMPLETED' && <ReviewSection appointmentId={a.id} />}
           </Card>
         ))}
       </div>

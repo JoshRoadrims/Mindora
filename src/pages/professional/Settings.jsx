@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Upload, Loader2, FileText, Eye } from 'lucide-react'
+import { Upload, Loader2, FileText, Eye, Download, AlertTriangle, Save } from 'lucide-react'
 import PageHeader from '../../components/PageHeader.jsx'
 import Card from '../../components/Card.jsx'
 import Badge from '../../components/Badge.jsx'
@@ -14,19 +14,67 @@ const docTypes = [
   { value: 'OTHER', label: 'Other supporting document' },
 ]
 
-function statusTone(status) {
+function docStatusTone(status) {
   if (status === 'APPROVED') return 'teal'
   if (status === 'REJECTED') return 'acute'
   return 'elevated' // PENDING
 }
 
+function deletionStatusTone(status) {
+  if (status === 'COMPLETED') return 'neutral'
+  if (status === 'REJECTED') return 'acute'
+  return 'elevated' // PENDING
+}
+
+const emptyProfileForm = {
+  bio: '',
+  qualifications: '',
+  focusAreas: '',
+  languages: '',
+  yearsExperience: 0,
+  location: '',
+  feeKes: 0,
+  onlineAvailable: true,
+  inPersonAvailable: false,
+}
+
 export default function Settings() {
+  const [profile, setProfile] = useState(undefined) // undefined = loading
+  const [profileForm, setProfileForm] = useState(emptyProfileForm)
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [profileSaved, setProfileSaved] = useState(false)
+
   const [documents, setDocuments] = useState(null)
   const [error, setError] = useState(null)
   const [selectedType, setSelectedType] = useState('LICENSE')
   const [file, setFile] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [viewingId, setViewingId] = useState(null)
+
+  const [deletionRequest, setDeletionRequest] = useState(undefined)
+  const [reason, setReason] = useState('')
+  const [submittingDeletion, setSubmittingDeletion] = useState(false)
+  const [exporting, setExporting] = useState(false)
+
+  const loadProfile = () => {
+    api
+      .getMyProfile()
+      .then((p) => {
+        setProfile(p)
+        setProfileForm({
+          bio: p.bio ?? '',
+          qualifications: (p.qualifications ?? []).join(', '),
+          focusAreas: (p.focusAreas ?? []).join(', '),
+          languages: (p.languages ?? []).join(', '),
+          yearsExperience: p.yearsExperience ?? 0,
+          location: p.location ?? '',
+          feeKes: p.feeKes ?? 0,
+          onlineAvailable: p.onlineAvailable ?? true,
+          inPersonAvailable: p.inPersonAvailable ?? false,
+        })
+      })
+      .catch((err) => setError(err.message))
+  }
 
   const load = () => {
     api
@@ -35,7 +83,53 @@ export default function Settings() {
       .catch((err) => setError(err.message))
   }
 
+  const loadDeletionStatus = () => {
+    api
+      .getMyDeletionRequest()
+      .then(setDeletionRequest)
+      .catch((err) => setError(err.message))
+  }
+
+  useEffect(loadProfile, [])
   useEffect(load, [])
+  useEffect(loadDeletionStatus, [])
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault()
+    setSavingProfile(true)
+    setProfileSaved(false)
+    setError(null)
+    try {
+      const payload = {
+        bio: profileForm.bio,
+        qualifications: profileForm.qualifications
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
+        focusAreas: profileForm.focusAreas
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
+        languages: profileForm.languages
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
+        yearsExperience: Number(profileForm.yearsExperience),
+        location: profileForm.location,
+        feeKes: Number(profileForm.feeKes),
+        onlineAvailable: profileForm.onlineAvailable,
+        inPersonAvailable: profileForm.inPersonAvailable,
+      }
+      await api.updateMyProfile(payload)
+      setProfileSaved(true)
+      setTimeout(() => setProfileSaved(false), 3000)
+      loadProfile()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSavingProfile(false)
+    }
+  }
 
   const handleUpload = async () => {
     if (!file) return
@@ -65,15 +159,172 @@ export default function Settings() {
     }
   }
 
+  const handleExport = async () => {
+    setExporting(true)
+    setError(null)
+    try {
+      const data = await api.exportMyData()
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'mindora-my-data.json'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handleRequestDeletion = async (e) => {
+    e.preventDefault()
+    setSubmittingDeletion(true)
+    setError(null)
+    try {
+      await api.requestAccountDeletion(reason)
+      setReason('')
+      loadDeletionStatus()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSubmittingDeletion(false)
+    }
+  }
+
+  const hasPendingDeletion = deletionRequest?.status === 'PENDING'
+
   return (
     <div>
       <PageHeader
         eyebrow="Settings"
-        title="Verification documents"
-        subtitle="Upload your credentials for review. Approval is required before your profile is visible to patients."
+        title="Profile & verification"
+        subtitle="Keep your public profile up to date and manage your verification documents."
       />
 
       <div className="p-8 max-w-2xl space-y-6">
+        <Card>
+          <h3 className="font-semibold text-navy-800 mb-3">Your public profile</h3>
+
+          {profile === undefined && !error && (
+            <p className="text-sm text-ink-500 flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+            </p>
+          )}
+
+          {profile && (
+            <form onSubmit={handleSaveProfile} className="space-y-3">
+              <div>
+                <label className="text-xs text-ink-500 block mb-1">Bio</label>
+                <textarea
+                  value={profileForm.bio}
+                  onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                  rows={4}
+                  className="w-full rounded-xl border border-ink-200 px-4 py-3 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-ink-500 block mb-1">Qualifications (comma-separated)</label>
+                <input
+                  value={profileForm.qualifications}
+                  onChange={(e) => setProfileForm({ ...profileForm, qualifications: e.target.value })}
+                  placeholder="PhD Clinical Psychology — University of Nairobi"
+                  className="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+                />
+                <p className="text-xs text-amber-600 mt-1">
+                  Changing this will remove your "Verified" badge until Mindora reviews it again.
+                </p>
+              </div>
+
+              <div>
+                <label className="text-xs text-ink-500 block mb-1">Focus areas (comma-separated)</label>
+                <input
+                  value={profileForm.focusAreas}
+                  onChange={(e) => setProfileForm({ ...profileForm, focusAreas: e.target.value })}
+                  placeholder="Anxiety, Depression, Trauma"
+                  className="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-ink-500 block mb-1">Languages (comma-separated)</label>
+                <input
+                  value={profileForm.languages}
+                  onChange={(e) => setProfileForm({ ...profileForm, languages: e.target.value })}
+                  placeholder="English, Swahili"
+                  className="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-ink-500 block mb-1">Years of experience</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={profileForm.yearsExperience}
+                    onChange={(e) => setProfileForm({ ...profileForm, yearsExperience: e.target.value })}
+                    className="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-ink-500 block mb-1">Fee (KES per session)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={profileForm.feeKes}
+                    onChange={(e) => setProfileForm({ ...profileForm, feeKes: e.target.value })}
+                    className="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-ink-500 block mb-1">Location</label>
+                <input
+                  value={profileForm.location}
+                  onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
+                  placeholder="Nairobi, Kenya"
+                  className="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+                />
+              </div>
+
+              <div className="flex gap-6 pt-1">
+                <label className="flex items-center gap-2 text-sm text-ink-600">
+                  <input
+                    type="checkbox"
+                    checked={profileForm.onlineAvailable}
+                    onChange={(e) => setProfileForm({ ...profileForm, onlineAvailable: e.target.checked })}
+                  />
+                  Online sessions
+                </label>
+                <label className="flex items-center gap-2 text-sm text-ink-600">
+                  <input
+                    type="checkbox"
+                    checked={profileForm.inPersonAvailable}
+                    onChange={(e) => setProfileForm({ ...profileForm, inPersonAvailable: e.target.checked })}
+                  />
+                  In-person sessions
+                </label>
+              </div>
+
+              <Button type="submit" variant="accent" disabled={savingProfile}>
+                {savingProfile ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : profileSaved ? (
+                  'Saved!'
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" /> Save profile
+                  </>
+                )}
+              </Button>
+            </form>
+          )}
+        </Card>
+
         <Disclaimer>
           Files are limited to PDF, JPG, or PNG, up to 10 MB. Documents are reviewed by the
           Mindora platform team — approval can take a few business days.
@@ -137,7 +388,7 @@ export default function Settings() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <Badge tone={statusTone(d.status)}>{d.status}</Badge>
+                  <Badge tone={docStatusTone(d.status)}>{d.status}</Badge>
                   <button
                     onClick={() => handleView(d.id)}
                     disabled={viewingId === d.id}
@@ -154,6 +405,67 @@ export default function Settings() {
               </div>
             ))}
           </div>
+        </Card>
+
+        <Card>
+          <h3 className="font-semibold text-navy-800 mb-2">Your data</h3>
+          <p className="text-sm text-ink-600 mb-4">
+            Download a copy of everything Mindora holds about your professional account —
+            profile, documents, and appointments — as a JSON file.
+          </p>
+          <Button variant="secondary" onClick={handleExport} disabled={exporting}>
+            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            Export my data
+          </Button>
+        </Card>
+
+        <Card>
+          <h3 className="font-semibold text-navy-800 mb-2">Delete my account</h3>
+
+          {deletionRequest === undefined && (
+            <p className="text-sm text-ink-500 flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Checking status...
+            </p>
+          )}
+
+          {deletionRequest && (
+            <div className="flex items-center gap-2 mb-4">
+              <Badge tone={deletionStatusTone(deletionRequest.status)}>{deletionRequest.status}</Badge>
+              <span className="text-xs text-ink-500">
+                {deletionRequest.status === 'PENDING' && 'Awaiting review by the Mindora team.'}
+                {deletionRequest.status === 'REJECTED' && 'Your request was reviewed and not completed.'}
+                {deletionRequest.status === 'COMPLETED' && 'Your account has been deleted.'}
+              </span>
+            </div>
+          )}
+
+          {!hasPendingDeletion && deletionRequest?.status !== 'COMPLETED' && (
+            <>
+              <p className="text-sm text-ink-600 mb-4">
+                Submitting this sends a request to the Mindora team for review — your account
+                isn't deleted immediately. Your own clinical notes on patients may be retained
+                separately for record-keeping purposes.
+              </p>
+              <form onSubmit={handleRequestDeletion} className="space-y-3">
+                <textarea
+                  placeholder="Reason (optional)"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-xl border border-ink-200 px-4 py-3 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+                />
+                <Button type="submit" variant="ghost" className="text-red-600" disabled={submittingDeletion}>
+                  {submittingDeletion ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <AlertTriangle className="h-4 w-4" /> Request account deletion
+                    </>
+                  )}
+                </Button>
+              </form>
+            </>
+          )}
         </Card>
       </div>
     </div>

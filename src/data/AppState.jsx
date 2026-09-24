@@ -18,8 +18,6 @@ export function AppStateProvider({ children }) {
     setRefreshToken(data.refreshToken)
   }
 
-  // Direct role-clear, no server call — used internally after logout
-  // completes, and as a fallback if the server call fails.
   const clearLocalState = useCallback(() => {
     setRoleState(null)
     clearSession()
@@ -29,10 +27,6 @@ export function AppStateProvider({ children }) {
     setOtpPending(null)
   }, [])
 
-  // The real logout: tells the server to revoke this refresh token (so it
-  // can never be used again, even if someone captured it), then clears
-  // local state. Falls back to clearing local state even if the server
-  // call fails, so the user is never stuck unable to log out.
   const logout = useCallback(async () => {
     const refreshToken = getRefreshToken()
     if (refreshToken) {
@@ -100,10 +94,12 @@ export function AppStateProvider({ children }) {
     setAuthError(null)
   }, [])
 
-  const registerUser = useCallback(async (fullName, email, password) => {
+  // consent must be `true` — the backend rejects anything else (missing,
+  // false) with a clear error, which surfaces via authError below.
+  const registerUser = useCallback(async (fullName, email, password, consent) => {
     setAuthError(null)
     try {
-      const data = await api.registerUser({ fullName, email, password })
+      const data = await api.registerUser({ fullName, email, password, consent })
       storeSession(data)
       setAuthUser(data.user)
       setRoleState('user')

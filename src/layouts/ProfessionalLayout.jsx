@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Repeat,
   BarChart3,
+  MessageCircle,
   Settings,
   Loader2,
 } from 'lucide-react'
@@ -21,6 +22,7 @@ const items = [
   { to: '/pro/referrals', label: 'Referrals', icon: Inbox },
   { to: '/pro/clients', label: 'Clients', icon: Users },
   { to: '/pro/appointments', label: 'Appointments', icon: CalendarDays },
+  { to: '/pro/messages', label: 'Messages', icon: MessageCircle },
   { to: '/pro/assessments', label: 'Assessments', icon: ClipboardList },
   { to: '/pro/follow-ups', label: 'Follow-ups', icon: Repeat },
   { to: '/pro/reports', label: 'Reports', icon: BarChart3 },
