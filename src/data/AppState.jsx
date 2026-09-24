@@ -1,64 +1,112 @@
 import React, { createContext, useContext, useMemo, useState, useCallback } from 'react'
-import { api, setToken, getToken } from './api.js'
+import { api, setToken, setRefreshToken, getRefreshToken, clearSession, getToken } from './api.js'
 import { checkInQuestions } from './mockData.js'
 
 const AppStateContext = createContext(null)
 
 export function AppStateProvider({ children }) {
-  const [role, setRoleState] = useState(null) // 'user' | 'professional' | 'admin'
-  const [authUser, setAuthUser] = useState(null) // { id, fullName, email } from the API
-  const [lastResult, setLastResult] = useState(null) // server response from POST /check-ins
+  const [role, setRoleState] = useState(null)
+  const [authUser, setAuthUser] = useState(null)
+  const [lastResult, setLastResult] = useState(null)
   const [selectedProfessional, setSelectedProfessional] = useState(null)
   const [booking, setBooking] = useState(null)
   const [authError, setAuthError] = useState(null)
+  const [otpPending, setOtpPending] = useState(null)
 
-  // Wrap setRole so logging out (role -> null) also clears the token and
-  // any per-session state, rather than leaving a stale token around.
-  const setRole = useCallback((next) => {
-    setRoleState(next)
-    if (next === null) {
-      setToken(null)
-      setAuthUser(null)
-      setLastResult(null)
-      setBooking(null)
-    }
+  const storeSession = (data) => {
+    setToken(data.accessToken)
+    setRefreshToken(data.refreshToken)
+  }
+
+  // Direct role-clear, no server call — used internally after logout
+  // completes, and as a fallback if the server call fails.
+  const clearLocalState = useCallback(() => {
+    setRoleState(null)
+    clearSession()
+    setAuthUser(null)
+    setLastResult(null)
+    setBooking(null)
+    setOtpPending(null)
   }, [])
 
-  const loginUser = useCallback(async (email, password) => {
+  // The real logout: tells the server to revoke this refresh token (so it
+  // can never be used again, even if someone captured it), then clears
+  // local state. Falls back to clearing local state even if the server
+  // call fails, so the user is never stuck unable to log out.
+  const logout = useCallback(async () => {
+    const refreshToken = getRefreshToken()
+    if (refreshToken) {
+      try {
+        await api.logout(refreshToken)
+      } catch {
+        // best-effort — still clear local state below regardless
+      }
+    }
+    clearLocalState()
+  }, [clearLocalState])
+
+  const setRole = useCallback(
+    (next) => {
+      if (next === null) {
+        logout()
+      } else {
+        setRoleState(next)
+      }
+    },
+    [logout]
+  )
+
+  const requestLogin = useCallback(async (role, email, password) => {
     setAuthError(null)
     try {
-      const data = await api.loginUser({ email, password })
-      setToken(data.token)
-      setAuthUser(data.user)
-      setRoleState('user')
-      return true
+      const loginFn = { user: api.loginUser, professional: api.loginProfessional, admin: api.loginAdmin }[role]
+      const data = await loginFn({ email, password })
+      if (data.otpRequired) {
+        setOtpPending({ role, email })
+        return true
+      }
+      setAuthError('Unexpected response from server.')
+      return false
     } catch (err) {
       setAuthError(err.message)
       return false
     }
+  }, [])
+
+  const verifyOtp = useCallback(
+    async (code) => {
+      if (!otpPending) {
+        setAuthError('No login in progress.')
+        return false
+      }
+      setAuthError(null)
+      try {
+        const data = await api.verifyOtp({ role: otpPending.role, email: otpPending.email, code })
+        storeSession(data)
+        setAuthUser(data.user ?? data.professional ?? data.admin)
+        setRoleState(otpPending.role)
+        setOtpPending(null)
+        return true
+      } catch (err) {
+        setAuthError(err.message)
+        return false
+      }
+    },
+    [otpPending]
+  )
+
+  const cancelOtp = useCallback(() => {
+    setOtpPending(null)
+    setAuthError(null)
   }, [])
 
   const registerUser = useCallback(async (fullName, email, password) => {
     setAuthError(null)
     try {
       const data = await api.registerUser({ fullName, email, password })
-      setToken(data.token)
+      storeSession(data)
       setAuthUser(data.user)
       setRoleState('user')
-      return true
-    } catch (err) {
-      setAuthError(err.message)
-      return false
-    }
-  }, [])
-
-  const loginProfessional = useCallback(async (email, password) => {
-    setAuthError(null)
-    try {
-      const data = await api.loginProfessional({ email, password })
-      setToken(data.token)
-      setAuthUser(data.professional)
-      setRoleState('professional')
       return true
     } catch (err) {
       setAuthError(err.message)
@@ -70,7 +118,7 @@ export function AppStateProvider({ children }) {
     setAuthError(null)
     try {
       const data = await api.registerProfessional({ fullName, email, password })
-      setToken(data.token)
+      storeSession(data)
       setAuthUser(data.professional)
       setRoleState('professional')
       return true
@@ -80,24 +128,6 @@ export function AppStateProvider({ children }) {
     }
   }, [])
 
-  const loginAdmin = useCallback(async (email, password) => {
-    setAuthError(null)
-    try {
-      const data = await api.loginAdmin({ email, password })
-      setToken(data.token)
-      setAuthUser(data.admin)
-      setRoleState('admin')
-      return true
-    } catch (err) {
-      setAuthError(err.message)
-      return false
-    }
-  }, [])
-
-  // Converts the { [questionId]: value } shape the check-in UI collects into
-  // the { domain, questionId, value }[] shape the API expects, submits it,
-  // and stores the server's computed risk level (the client never computes
-  // risk itself — see checkin.routes.js for why).
   const submitCheckIn = useCallback(async (answersById) => {
     const answers = checkInQuestions.map((q) => ({
       domain: q.id,
@@ -116,11 +146,12 @@ export function AppStateProvider({ children }) {
       authUser,
       authError,
       isAuthenticated: Boolean(getToken()),
-      loginUser,
+      otpPending,
+      requestLogin,
+      verifyOtp,
+      cancelOtp,
       registerUser,
-      loginProfessional,
       registerProfessional,
-      loginAdmin,
       submitCheckIn,
       lastResult,
       selectedProfessional,
@@ -132,11 +163,12 @@ export function AppStateProvider({ children }) {
       role,
       authUser,
       authError,
-      loginUser,
+      otpPending,
+      requestLogin,
+      verifyOtp,
+      cancelOtp,
       registerUser,
-      loginProfessional,
       registerProfessional,
-      loginAdmin,
       submitCheckIn,
       lastResult,
       selectedProfessional,

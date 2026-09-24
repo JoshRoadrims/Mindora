@@ -1,6 +1,7 @@
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 const TOKEN_KEY = 'mindora_token'
+const REFRESH_TOKEN_KEY = 'mindora_refresh_token'
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY)
@@ -11,7 +12,40 @@ export function setToken(token) {
   else localStorage.removeItem(TOKEN_KEY)
 }
 
-async function request(path, { method = 'GET', body, auth = true } = {}) {
+export function getRefreshToken() {
+  return localStorage.getItem(REFRESH_TOKEN_KEY)
+}
+
+export function setRefreshToken(token) {
+  if (token) localStorage.setItem(REFRESH_TOKEN_KEY, token)
+  else localStorage.removeItem(REFRESH_TOKEN_KEY)
+}
+
+export function clearSession() {
+  setToken(null)
+  setRefreshToken(null)
+}
+
+async function tryRefresh() {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) return false
+  try {
+    const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    })
+    if (!res.ok) return false
+    const data = await res.json()
+    setToken(data.accessToken)
+    setRefreshToken(data.refreshToken)
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function request(path, { method = 'GET', body, auth = true, _retried = false } = {}) {
   const headers = { 'Content-Type': 'application/json' }
   const token = getToken()
   if (auth && token) headers.Authorization = `Bearer ${token}`
@@ -26,6 +60,14 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
   const data = isJson ? await res.json() : null
 
   if (!res.ok) {
+    if (res.status === 401 && auth && !_retried && path !== '/api/auth/refresh') {
+      const refreshed = await tryRefresh()
+      if (refreshed) {
+        return request(path, { method, body, auth, _retried: true })
+      }
+      clearSession()
+    }
+
     let message = `Request failed (${res.status})`
     if (data?.error) {
       if (typeof data.error === 'string') {
@@ -79,6 +121,10 @@ export const api = {
   loginProfessional: (payload) =>
     request('/api/auth/professional/login', { method: 'POST', body: payload, auth: false }),
   loginAdmin: (payload) => request('/api/auth/admin/login', { method: 'POST', body: payload, auth: false }),
+  verifyOtp: (payload) => request('/api/auth/verify-otp', { method: 'POST', body: payload, auth: false }),
+  logout: (refreshToken) =>
+    request('/api/auth/logout', { method: 'POST', body: { refreshToken }, auth: false }),
+  logoutAll: () => request('/api/auth/logout-all', { method: 'POST' }),
 
   // --- Check-ins ---
   submitCheckIn: (answers) => request('/api/check-ins', { method: 'POST', body: { answers } }),
@@ -101,6 +147,9 @@ export const api = {
   adminListAppointments: () => request('/api/admin/appointments'),
   adminListReferrals: () => request('/api/admin/referrals'),
   getAdminAnalytics: () => request('/api/admin/analytics'),
+  adminListDeletionRequests: () => request('/api/admin/deletion-requests'),
+  adminProcessDeletionRequest: (id, action) =>
+    request(`/api/admin/deletion-requests/${id}/process`, { method: 'PATCH', body: { action } }),
 
   // --- Professionals (directory) ---
   listProfessionals: () => request('/api/professionals'),
@@ -139,4 +188,10 @@ export const api = {
 
   // --- Mindora AI ---
   sendAiMessage: (messages) => request('/api/ai/chat', { method: 'POST', body: { messages } }),
+
+  // --- Account (consent / deletion / export) ---
+  requestAccountDeletion: (reason) =>
+    request('/api/account/deletion-request', { method: 'POST', body: { reason } }),
+  getMyDeletionRequest: () => request('/api/account/deletion-request/mine'),
+  exportMyData: () => request('/api/account/export'),
 }
