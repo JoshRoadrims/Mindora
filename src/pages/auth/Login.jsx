@@ -4,16 +4,34 @@ import { User, Stethoscope, ShieldCheck, Loader2, Eye, EyeOff, Mail } from 'luci
 import Button from '../../components/Button.jsx'
 import { useAppState } from '../../data/AppState.jsx'
 
+// Which portal this build is locked to. Set VITE_PORTAL to 'user',
+// 'professional', or 'admin' on each hosted site. When it is unset (local
+// development), all three tabs show and behaviour is unchanged.
+const VALID_PORTALS = ['user', 'professional', 'admin']
+const PORTAL = VALID_PORTALS.includes(import.meta.env.VITE_PORTAL) ? import.meta.env.VITE_PORTAL : null
+
+// Staging only: shows a notice on the code screen that no email is sent
+// and the code is 000000. Set VITE_TEST_CODE=true to turn it on.
+const SHOW_TEST_CODE = import.meta.env.VITE_TEST_CODE === 'true'
+
+const HEADINGS = {
+  user: { title: 'Welcome back', subtitle: 'Log in to continue your wellbeing journey.' },
+  professional: { title: 'Professional login', subtitle: 'Log in to manage your referrals and clients.' },
+  admin: { title: 'Admin login', subtitle: 'Authorised staff only.' },
+}
+
 export default function Login() {
-  const [audience, setAudience] = useState('user') // 'user' | 'professional' | 'admin'
-  const [email, setEmail] = useState('kilwanda.josh@roadrimz.com')
-  const [password, setPassword] = useState('demo-password')
+  const [audience, setAudience] = useState(PORTAL || 'user') // 'user' | 'professional' | 'admin'
+  const [email, setEmail] = useState(PORTAL ? '' : 'kilwanda.josh@roadrimz.com')
+  const [password, setPassword] = useState(PORTAL ? '' : 'demo-password')
   const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [otpCode, setOtpCode] = useState('')
   const [verifying, setVerifying] = useState(false)
   const navigate = useNavigate()
   const { requestLogin, verifyOtp, cancelOtp, otpPending, authError } = useAppState()
+
+  const heading = HEADINGS[PORTAL || 'user']
 
   const handleAudienceChange = (next) => {
     setAudience(next)
@@ -52,6 +70,12 @@ export default function Login() {
           <p className="text-sm text-ink-500 mb-6 text-center">
             We sent a 6-digit code to <span className="font-medium text-navy-700">{otpPending.email}</span>
           </p>
+
+          {SHOW_TEST_CODE && otpPending.role !== 'admin' && (
+            <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mb-4 text-center">
+              Test environment: no email is sent. Enter 000000.
+            </p>
+          )}
 
           <form onSubmit={handleVerify} className="space-y-4">
             <input
@@ -133,35 +157,37 @@ export default function Login() {
             <span className="font-display font-bold text-lg text-navy-800">Mindora</span>
           </div>
 
-          <h2 className="text-2xl font-bold text-navy-800 mb-1">Welcome back</h2>
-          <p className="text-ink-500 mb-6 text-sm">Log in to continue your wellbeing journey.</p>
+          <h2 className="text-2xl font-bold text-navy-800 mb-1">{heading.title}</h2>
+          <p className="text-ink-500 mb-6 text-sm">{heading.subtitle}</p>
 
-          <div className="grid grid-cols-3 gap-1 rounded-xl border border-ink-200 p-1 mb-6 bg-ink-50">
-            <button
-              onClick={() => handleAudienceChange('user')}
-              className={`flex flex-col items-center justify-center gap-1 py-2.5 rounded-lg text-xs font-semibold transition-colors ${
-                audience === 'user' ? 'bg-white shadow-soft text-navy-800' : 'text-ink-500'
-              }`}
-            >
-              <User className="h-4 w-4" /> User
-            </button>
-            <button
-              onClick={() => handleAudienceChange('professional')}
-              className={`flex flex-col items-center justify-center gap-1 py-2.5 rounded-lg text-xs font-semibold transition-colors ${
-                audience === 'professional' ? 'bg-white shadow-soft text-navy-800' : 'text-ink-500'
-              }`}
-            >
-              <Stethoscope className="h-4 w-4" /> Professional
-            </button>
-            <button
-              onClick={() => handleAudienceChange('admin')}
-              className={`flex flex-col items-center justify-center gap-1 py-2.5 rounded-lg text-xs font-semibold transition-colors ${
-                audience === 'admin' ? 'bg-white shadow-soft text-navy-800' : 'text-ink-500'
-              }`}
-            >
-              <ShieldCheck className="h-4 w-4" /> Admin
-            </button>
-          </div>
+          {!PORTAL && (
+            <div className="grid grid-cols-3 gap-1 rounded-xl border border-ink-200 p-1 mb-6 bg-ink-50">
+              <button
+                onClick={() => handleAudienceChange('user')}
+                className={`flex flex-col items-center justify-center gap-1 py-2.5 rounded-lg text-xs font-semibold transition-colors ${
+                  audience === 'user' ? 'bg-white shadow-soft text-navy-800' : 'text-ink-500'
+                }`}
+              >
+                <User className="h-4 w-4" /> User
+              </button>
+              <button
+                onClick={() => handleAudienceChange('professional')}
+                className={`flex flex-col items-center justify-center gap-1 py-2.5 rounded-lg text-xs font-semibold transition-colors ${
+                  audience === 'professional' ? 'bg-white shadow-soft text-navy-800' : 'text-ink-500'
+                }`}
+              >
+                <Stethoscope className="h-4 w-4" /> Professional
+              </button>
+              <button
+                onClick={() => handleAudienceChange('admin')}
+                className={`flex flex-col items-center justify-center gap-1 py-2.5 rounded-lg text-xs font-semibold transition-colors ${
+                  audience === 'admin' ? 'bg-white shadow-soft text-navy-800' : 'text-ink-500'
+                }`}
+              >
+                <ShieldCheck className="h-4 w-4" /> Admin
+              </button>
+            </div>
+          )}
 
           <form className="space-y-4" onSubmit={handleLogin}>
             <div>
@@ -198,21 +224,27 @@ export default function Login() {
             </Button>
           </form>
 
-          <p className="text-xs text-ink-400 mt-3">
-            All demo accounts now use{' '}
-            <span className="font-mono">kilwanda.josh@roadrimz.com</span> (except safety@/support@mindora.local) —
-            password: <span className="font-mono">demo-password</span>. A login code will be emailed on submit.
-          </p>
+          {!PORTAL && (
+            <p className="text-xs text-ink-400 mt-3">
+              All demo accounts now use{' '}
+              <span className="font-mono">kilwanda.josh@roadrimz.com</span> (except safety@/support@mindora.local) —
+              password: <span className="font-mono">demo-password</span>. A login code will be emailed on submit.
+            </p>
+          )}
 
-          <div className="flex items-center gap-3 my-6">
-            <div className="h-px bg-ink-100 flex-1" />
-            <span className="text-xs text-ink-400">or</span>
-            <div className="h-px bg-ink-100 flex-1" />
-          </div>
+          {PORTAL !== 'admin' && (
+            <>
+              <div className="flex items-center gap-3 my-6">
+                <div className="h-px bg-ink-100 flex-1" />
+                <span className="text-xs text-ink-400">or</span>
+                <div className="h-px bg-ink-100 flex-1" />
+              </div>
 
-          <Button variant="secondary" className="w-full" onClick={() => navigate('/signup')}>
-            Create account
-          </Button>
+              <Button variant="secondary" className="w-full" onClick={() => navigate('/signup')}>
+                Create account
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>

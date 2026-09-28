@@ -1,11 +1,17 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, Navigate } from 'react-router-dom'
 import { User, Stethoscope, ArrowRight, Loader2 } from 'lucide-react'
 import Button from '../../components/Button.jsx'
 import { useAppState } from '../../data/AppState.jsx'
 
+// Which portal this build is locked to (see Login.jsx). Unset means local
+// development: both account types can be chosen. The admin portal has no
+// signup at all, since admin accounts are never self-created.
+const VALID_PORTALS = ['user', 'professional', 'admin']
+const PORTAL = VALID_PORTALS.includes(import.meta.env.VITE_PORTAL) ? import.meta.env.VITE_PORTAL : null
+
 export default function Signup() {
-  const [selected, setSelected] = useState('user')
+  const [selected, setSelected] = useState(PORTAL === 'professional' ? 'professional' : 'user')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -13,6 +19,10 @@ export default function Signup() {
   const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
   const { registerUser, registerProfessional, authError } = useAppState()
+
+  if (PORTAL === 'admin') {
+    return <Navigate to="/" replace />
+  }
 
   const handleCreate = async (e) => {
     e.preventDefault()
@@ -36,45 +46,49 @@ export default function Signup() {
         </div>
 
         <h1 className="text-2xl font-bold text-navy-800 mb-1">Create your account</h1>
-        <p className="text-ink-500 text-sm mb-6">Tell us which kind of account you need.</p>
+        <p className="text-ink-500 text-sm mb-6">
+          {PORTAL ? 'Fill in your details to get started.' : 'Tell us which kind of account you need.'}
+        </p>
 
-        <div className="space-y-3 mb-6">
-          <button
-            type="button"
-            onClick={() => setSelected('user')}
-            className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
-              selected === 'user'
-                ? 'border-teal-400 bg-teal-50/60'
-                : 'border-ink-200 hover:border-ink-300'
-            }`}
-          >
-            <div className="h-10 w-10 rounded-lg bg-navy-800 text-white flex items-center justify-center">
-              <User className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="font-semibold text-navy-800 text-sm">I'm a user</p>
-              <p className="text-xs text-ink-500">Track my wellbeing and get support</p>
-            </div>
-          </button>
+        {!PORTAL && (
+          <div className="space-y-3 mb-6">
+            <button
+              type="button"
+              onClick={() => setSelected('user')}
+              className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
+                selected === 'user'
+                  ? 'border-teal-400 bg-teal-50/60'
+                  : 'border-ink-200 hover:border-ink-300'
+              }`}
+            >
+              <div className="h-10 w-10 rounded-lg bg-navy-800 text-white flex items-center justify-center">
+                <User className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-semibold text-navy-800 text-sm">I'm a user</p>
+                <p className="text-xs text-ink-500">Track my wellbeing and get support</p>
+              </div>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setSelected('professional')}
-            className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
-              selected === 'professional'
-                ? 'border-teal-400 bg-teal-50/60'
-                : 'border-ink-200 hover:border-ink-300'
-            }`}
-          >
-            <div className="h-10 w-10 rounded-lg bg-navy-800 text-white flex items-center justify-center">
-              <Stethoscope className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="font-semibold text-navy-800 text-sm">I'm a mental-health professional</p>
-              <p className="text-xs text-ink-500">Receive referrals and manage clients</p>
-            </div>
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => setSelected('professional')}
+              className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
+                selected === 'professional'
+                  ? 'border-teal-400 bg-teal-50/60'
+                  : 'border-ink-200 hover:border-ink-300'
+              }`}
+            >
+              <div className="h-10 w-10 rounded-lg bg-navy-800 text-white flex items-center justify-center">
+                <Stethoscope className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-semibold text-navy-800 text-sm">I'm a mental-health professional</p>
+                <p className="text-xs text-ink-500">Receive referrals and manage clients</p>
+              </div>
+            </button>
+          </div>
+        )}
 
         <form onSubmit={handleCreate} className="space-y-4">
           <input
