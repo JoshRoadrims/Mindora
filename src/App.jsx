@@ -34,6 +34,7 @@ import ProAppointments from './pages/professional/Appointments.jsx'
 import ProMessages from './pages/professional/Messages.jsx'
 import ProGroups from './pages/professional/Groups.jsx'
 import ProGroupManage from './pages/professional/GroupManage.jsx'
+import Earnings from './pages/professional/Earnings.jsx'
 import ProAssessments from './pages/professional/Assessments.jsx'
 import FollowUps from './pages/professional/FollowUps.jsx'
 import Reports from './pages/professional/Reports.jsx'
@@ -47,6 +48,7 @@ import AdminReferrals from './pages/admin/Referrals.jsx'
 import AdminAppointments from './pages/admin/Appointments.jsx'
 import Safety from './pages/admin/Safety.jsx'
 import Analytics from './pages/admin/Analytics.jsx'
+import Payouts from './pages/admin/Payouts.jsx'
 import Institutions from './pages/admin/Institutions.jsx'
 import DeletionRequests from './pages/admin/DeletionRequests.jsx'
 import AdminSettings from './pages/admin/Settings.jsx'
@@ -89,6 +91,7 @@ export default function App() {
         <Route path="messages" element={<ProMessages />} />
         <Route path="groups" element={<ProGroups />} />
         <Route path="groups/:groupId" element={<ProGroupManage />} />
+        <Route path="earnings" element={<Earnings />} />
         <Route path="assessments" element={<ProAssessments />} />
         <Route path="follow-ups" element={<FollowUps />} />
         <Route path="reports" element={<Reports />} />
@@ -104,6 +107,7 @@ export default function App() {
         <Route path="appointments" element={<AdminAppointments />} />
         <Route path="safety" element={<Safety />} />
         <Route path="analytics" element={<Analytics />} />
+        <Route path="payouts" element={<Payouts />} />
         <Route path="institutions" element={<Institutions />} />
         <Route path="deletion-requests" element={<DeletionRequests />} />
         <Route path="settings" element={<AdminSettings />} />

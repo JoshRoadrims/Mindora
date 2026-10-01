@@ -10,6 +10,7 @@ import {
   BarChart3,
   MessageCircle,
   UsersRound,
+  Wallet,
   Settings,
   Loader2,
 } from 'lucide-react'
@@ -25,6 +26,7 @@ const items = [
   { to: '/pro/appointments', label: 'Appointments', icon: CalendarDays },
   { to: '/pro/messages', label: 'Messages', icon: MessageCircle },
   { to: '/pro/groups', label: 'Support groups', icon: UsersRound },
+  { to: '/pro/earnings', label: 'Earnings', icon: Wallet },
   { to: '/pro/assessments', label: 'Assessments', icon: ClipboardList },
   { to: '/pro/follow-ups', label: 'Follow-ups', icon: Repeat },
   { to: '/pro/reports', label: 'Reports', icon: BarChart3 },

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Loader2, Video, MapPin, Star } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Loader2, Video, MapPin, Star, Smartphone, CheckCircle2 } from 'lucide-react'
 import PageHeader from '../../components/PageHeader.jsx'
 import Card from '../../components/Card.jsx'
 import Badge from '../../components/Badge.jsx'
@@ -8,6 +8,8 @@ import { api } from '../../data/api.js'
 
 const JOIN_WINDOW_BEFORE_MS = 10 * 60 * 1000
 const JOIN_WINDOW_AFTER_MS = 60 * 60 * 1000
+const PAYMENT_POLL_MS = 3000
+const PAYMENT_POLL_TIMEOUT_MS = 90 * 1000
 
 function formatDateTime(iso) {
   return new Date(iso).toLocaleString(undefined, {
@@ -105,6 +107,121 @@ function ReviewSection({ appointmentId }) {
   )
 }
 
+function PaymentSection({ appointment }) {
+  const [status, setStatus] = useState(null) // null = loading
+  const [phone, setPhone] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState(null)
+  const [polling, setPolling] = useState(false)
+  const pollTimeoutRef = useRef(null)
+  const pollIntervalRef = useRef(null)
+
+  const amountDue = appointment.feeKes - appointment.institutionCoveredKes
+
+  const loadStatus = () => {
+    api
+      .getPaymentStatus(appointment.id)
+      .then(setStatus)
+      .catch((err) => setError(err.message))
+  }
+
+  useEffect(() => {
+    loadStatus()
+    return () => {
+      clearInterval(pollIntervalRef.current)
+      clearTimeout(pollTimeoutRef.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appointment.id])
+
+  const startPolling = () => {
+    setPolling(true)
+    pollIntervalRef.current = setInterval(() => {
+      api.getPaymentStatus(appointment.id).then((result) => {
+        setStatus(result)
+        if (result.status === 'PAID' || result.status === 'FAILED') {
+          clearInterval(pollIntervalRef.current)
+          clearTimeout(pollTimeoutRef.current)
+          setPolling(false)
+        }
+      })
+    }, PAYMENT_POLL_MS)
+    pollTimeoutRef.current = setTimeout(() => {
+      clearInterval(pollIntervalRef.current)
+      setPolling(false)
+    }, PAYMENT_POLL_TIMEOUT_MS)
+  }
+
+  const handlePay = async (e) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setError(null)
+    try {
+      await api.initiatePayment(appointment.id, phone)
+      setStatus({ status: 'PENDING' })
+      startPolling()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (amountDue <= 0 || status === null) return null
+
+  if (status.status === 'PAID') {
+    return (
+      <div className="pt-3 border-t border-ink-100 flex items-center gap-2 text-sm text-teal-700">
+        <CheckCircle2 className="h-4 w-4" /> Paid
+        {status.mpesaReceiptNumber && (
+          <span className="text-ink-400 font-mono text-xs">· {status.mpesaReceiptNumber}</span>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="pt-3 border-t border-ink-100 space-y-2">
+      <p className="text-xs text-ink-500">
+        {status.status === 'PENDING' && !polling
+          ? 'Payment pending'
+          : `Pay KES ${amountDue.toLocaleString()} via M-Pesa`}
+      </p>
+
+      {polling && (
+        <div className="flex items-center gap-2 text-sm text-navy-700 bg-teal-50 rounded-lg px-3 py-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Check your phone — enter your M-Pesa PIN to complete payment.
+        </div>
+      )}
+
+      {status.status === 'FAILED' && !polling && (
+        <p className="text-xs text-red-600">{status.resultDesc || 'Payment did not go through. Please try again.'}</p>
+      )}
+
+      {!polling && (
+        <form onSubmit={handlePay} className="flex gap-2">
+          <div className="flex-1 relative">
+            <Smartphone className="h-4 w-4 text-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="tel"
+              placeholder="07XX XXX XXX"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+              className="w-full rounded-lg border border-ink-200 pl-9 pr-3 py-2 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+            />
+          </div>
+          <Button type="submit" variant="accent" disabled={submitting || !phone}>
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Pay'}
+          </Button>
+        </form>
+      )}
+      {error && <p className="text-xs text-red-600">{error}</p>}
+    </div>
+  )
+}
+
 export default function Appointments() {
   const [appointments, setAppointments] = useState(null)
   const [error, setError] = useState(null)
@@ -151,10 +268,18 @@ export default function Appointments() {
                     <MapPin className="h-3.5 w-3.5" />
                   )}
                   {a.type === 'ONLINE' ? 'Online' : 'In-person'} • KES {a.feeKes.toLocaleString()}
+                  {a.institutionCoveredKes > 0 && (
+                    <span className="text-teal-600">
+                      {' '}
+                      (KES {a.institutionCoveredKes.toLocaleString()} covered)
+                    </span>
+                  )}
                 </p>
               </div>
               <Badge tone={a.status === 'SCHEDULED' ? 'teal' : 'neutral'}>{a.status}</Badge>
             </div>
+
+            {a.status === 'SCHEDULED' && <PaymentSection appointment={a} />}
 
             {a.status === 'SCHEDULED' && a.type === 'ONLINE' && (
               <div className="pt-3 border-t border-ink-100">

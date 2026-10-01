@@ -246,4 +246,17 @@ export const api = {
     request(`/api/groups/${groupId}/messages/${messageId}/clear-flag`, { method: 'POST' }),
   getGroupReports: (groupId) => request(`/api/groups/${groupId}/reports`),
   resolveGroupReport: (reportId) => request(`/api/groups/reports/${reportId}/resolve`, { method: 'POST' }),
+
+  // --- Payments ---
+  initiatePayment: (appointmentId, phoneNumber) =>
+    request('/api/payments/initiate', { method: 'POST', body: { appointmentId, phoneNumber } }),
+  getPaymentStatus: (appointmentId) => request(`/api/payments/appointment/${appointmentId}`),
+
+  // --- Payouts (admin) ---
+  getPayoutLedger: () => request('/api/payments/ledger'),
+  createPayout: (payload) => request('/api/payments/payouts', { method: 'POST', body: payload }),
+  adminListPayouts: () => request('/api/payments/payouts'),
+
+  // --- Payouts (professional's own) ---
+  getMyPayouts: () => request('/api/payments/payouts/mine'),
 }
