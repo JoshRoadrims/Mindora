@@ -240,7 +240,7 @@ export default function Appointments() {
   return (
     <div>
       <PageHeader eyebrow="Appointments" title="Your appointments" />
-      <div className="p-8 max-w-2xl space-y-4">
+      <div className="p-4 md:p-8 max-w-2xl space-y-4">
         {error && <Card className="text-sm text-red-600">Couldn't load appointments: {error}</Card>}
 
         {appointments === null && !error && (

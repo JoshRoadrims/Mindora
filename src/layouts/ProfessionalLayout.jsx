@@ -64,7 +64,7 @@ export default function ProfessionalLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-ink-50">
+    <div className="flex flex-col md:flex-row min-h-screen bg-ink-50">
       <Sidebar
         items={items}
         roleLabel="Professional account"

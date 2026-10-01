@@ -108,7 +108,7 @@ export default function Settings() {
   return (
     <div>
       <PageHeader eyebrow="Settings" title="Account settings" />
-      <div className="p-8 max-w-xl space-y-6">
+      <div className="p-4 md:p-8 max-w-xl space-y-6">
         <Card>
           <p className="text-xs text-ink-500 mb-1">Full name</p>
           <p className="font-medium text-navy-800 mb-4">{authUser?.fullName}</p>
@@ -138,13 +138,13 @@ export default function Settings() {
                 sessions — your employer never sees which sessions you book, only aggregate usage
                 for billing.
               </p>
-              <form onSubmit={handleEnroll} className="flex gap-2">
+              <form onSubmit={handleEnroll} className="flex flex-col sm:flex-row gap-2">
                 <input
                   placeholder="Enrollment code"
                   value={enrollmentCode}
                   onChange={(e) => setEnrollmentCode(e.target.value)}
                   required
-                  className="flex-1 rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none uppercase"
+                  className="flex-1 min-w-0 rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none uppercase"
                 />
                 <Button type="submit" variant="accent" disabled={enrolling}>
                   {enrolling ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Link'}

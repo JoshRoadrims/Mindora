@@ -54,16 +54,16 @@ export default function Dashboard() {
         subtitle="How are you feeling today?"
       />
 
-      <div className="p-8 space-y-6 max-w-5xl">
-        <div className="rounded-2xl bg-mindora-gradient text-white p-8 flex items-center justify-between shadow-lift">
+      <div className="p-4 md:p-8 space-y-6 max-w-5xl">
+        <div className="rounded-2xl bg-mindora-gradient text-white p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-5 shadow-lift">
           <div>
             <p className="text-teal-200 text-sm font-semibold mb-2">Today's check-in</p>
-            <h2 className="text-2xl font-bold mb-2">Start today's wellbeing check-in</h2>
+            <h2 className="text-xl md:text-2xl font-bold mb-2">Start today's wellbeing check-in</h2>
             <p className="text-navy-100 max-w-md text-sm">
               Two minutes, ten questions. Helps Mindora understand how you're really doing.
             </p>
           </div>
-          <Button as="link" to="/app/check-in" variant="accent" className="shrink-0">
+          <Button as="link" to="/app/check-in" variant="accent" className="shrink-0 w-full md:w-auto">
             Start check-in <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
@@ -81,7 +81,7 @@ export default function Dashboard() {
             </Card>
           )}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             <Card>
               <p className="text-xs text-ink-500 mb-1">Current score</p>
               <p className="text-3xl font-bold text-navy-800">{currentScore ?? '—'}</p>

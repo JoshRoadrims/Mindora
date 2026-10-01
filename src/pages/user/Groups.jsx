@@ -45,7 +45,7 @@ export default function Groups() {
         subtitle="Facilitated by verified professionals. Members are identified by a pseudonym, never your name."
       />
 
-      <div className="p-8 max-w-3xl space-y-4">
+      <div className="p-4 md:p-8 max-w-3xl space-y-4">
         {error && <Card className="text-sm text-red-600">Couldn't load groups: {error}</Card>}
 
         {groups === null && !error && (

@@ -62,8 +62,8 @@ export default function FindProfessional() {
     <div>
       <PageHeader eyebrow="Support network" title="Find the right professional" />
 
-      <div className="p-8 flex gap-8">
-        <aside className="w-64 shrink-0 space-y-6">
+      <div className="p-4 md:p-8 flex flex-col md:flex-row gap-6 md:gap-8">
+        <aside className="w-full md:w-64 shrink-0 space-y-6">
           <FilterGroup
             label="Specialty"
             options={specialties}
@@ -75,7 +75,7 @@ export default function FindProfessional() {
           <FilterGroup label="Consultation mode" options={modes} value={mode} onChange={setMode} />
         </aside>
 
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 space-y-4 min-w-0">
           {error && (
             <Card className="text-sm text-red-600">Couldn't load professionals: {error}</Card>
           )}
@@ -91,13 +91,13 @@ export default function FindProfessional() {
           )}
 
           {filtered.map((p) => (
-            <Card key={p.id} className="flex items-center justify-between gap-6">
+            <Card key={p.id} className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
               <div className="flex gap-4">
                 <div className="h-14 w-14 rounded-xl bg-navy-800 text-white flex items-center justify-center font-display font-bold text-lg shrink-0">
                   {p.fullName.split(' ').map((n) => n[0]).slice(-2).join('')}
                 </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <p className="font-semibold text-navy-800">{p.fullName}</p>
                     {p.verified && <Badge tone="teal">Verified</Badge>}
                   </div>
@@ -110,7 +110,7 @@ export default function FindProfessional() {
                   </div>
                 </div>
               </div>
-              <div className="text-right shrink-0">
+              <div className="md:text-right shrink-0 pl-18 md:pl-0">
                 <p className="font-semibold text-navy-800 mb-1">
                   {p.feeKes ? `KES ${p.feeKes.toLocaleString()} / session` : 'Fee not listed'}
                 </p>
@@ -140,13 +140,13 @@ function FilterGroup({ label, options, labels, value, onChange }) {
   return (
     <div>
       <p className="text-xs font-semibold uppercase tracking-wide text-ink-500 mb-2">{label}</p>
-      <div className="space-y-1">
+      <div className="flex flex-wrap gap-1 md:block md:space-y-1">
         {options.map((opt) => (
           <button
             key={opt}
             onClick={() => onChange(opt)}
-            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-              value === opt ? 'bg-navy-800 text-white font-semibold' : 'text-ink-600 hover:bg-ink-100'
+            className={`text-left px-3 py-2 rounded-lg text-sm transition-colors md:w-full ${
+              value === opt ? 'bg-navy-800 text-white font-semibold' : 'text-ink-600 hover:bg-ink-100 bg-ink-50 md:bg-transparent'
             }`}
           >
             {labels ? labels[opt] ?? opt : opt}

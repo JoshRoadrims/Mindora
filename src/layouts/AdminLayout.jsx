@@ -41,7 +41,7 @@ export default function AdminLayout() {
   const items = allItems.filter((item) => !adminRole || item.roles.includes(adminRole))
 
   return (
-    <div className="flex min-h-screen bg-ink-50">
+    <div className="flex flex-col md:flex-row min-h-screen bg-ink-50">
       <Sidebar
         items={items}
         roleLabel={roleLabels[adminRole] ?? 'Mindora admin'}

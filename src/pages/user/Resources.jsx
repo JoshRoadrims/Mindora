@@ -13,7 +13,7 @@ export default function Resources() {
   return (
     <div>
       <PageHeader eyebrow="Resources" title="Stress-management resources" />
-      <div className="p-8 grid md:grid-cols-2 gap-4 max-w-4xl">
+      <div className="p-4 md:p-8 grid md:grid-cols-2 gap-4 max-w-4xl">
         {resources.map((r) => (
           <Card key={r.title} className="flex items-start gap-4">
             <div className="h-10 w-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">

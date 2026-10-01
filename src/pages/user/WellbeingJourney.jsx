@@ -70,7 +70,7 @@ export default function WellbeingJourney() {
     <div>
       <PageHeader eyebrow="My wellbeing" title="Your wellbeing journey" />
 
-      <div className="p-8 space-y-6 max-w-4xl">
+      <div className="p-4 md:p-8 space-y-6 max-w-4xl">
         {error && <Card className="text-sm text-red-600">Couldn't load your history: {error}</Card>}
 
         {history === null && !error && (
@@ -86,7 +86,7 @@ export default function WellbeingJourney() {
         )}
 
         {chartData.length >= 2 && (
-          <Card>
+          <Card className="overflow-x-auto">
             <h3 className="font-semibold text-navy-800 mb-4">
               Trends across your last {chartData.length} check-ins
             </h3>

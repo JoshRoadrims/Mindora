@@ -65,7 +65,7 @@ export default function BookConsultation() {
     return (
       <div>
         <PageHeader eyebrow="Booking confirmed" title="You're all set" />
-        <div className="p-8 max-w-xl mx-auto">
+        <div className="p-4 md:p-8 max-w-xl mx-auto">
           <Card className="text-center py-10">
             <div className="mx-auto h-14 w-14 rounded-full bg-teal-50 flex items-center justify-center mb-4">
               <CheckCircle2 className="h-7 w-7 text-teal-600" />
@@ -93,7 +93,7 @@ export default function BookConsultation() {
   return (
     <div>
       <PageHeader eyebrow="Booking" title="Book your consultation" />
-      <div className="p-8 max-w-xl mx-auto space-y-6">
+      <div className="p-4 md:p-8 max-w-xl mx-auto space-y-6">
         <Card>
           <p className="text-xs text-ink-500 mb-1">Professional</p>
           <p className="font-semibold text-navy-800">{selectedProfessional.fullName}</p>
@@ -139,7 +139,7 @@ export default function BookConsultation() {
         </Card>
 
         <Card>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
               <p className="text-xs text-ink-500">Consultation fee</p>
               {hasCoverage ? (
@@ -153,7 +153,7 @@ export default function BookConsultation() {
                 </p>
               )}
             </div>
-            <Button variant="accent" onClick={handleConfirm} disabled={submitting}>
+            <Button variant="accent" onClick={handleConfirm} disabled={submitting} className="w-full md:w-auto">
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirm booking'}
             </Button>
           </div>

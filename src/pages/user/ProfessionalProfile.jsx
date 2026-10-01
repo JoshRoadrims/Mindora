@@ -59,7 +59,7 @@ export default function ProfessionalProfile() {
 
   if (error) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <p className="text-red-600 text-sm mb-2">{error}</p>
         <Link to="/app/find-a-professional" className="text-teal-600 font-semibold text-sm">
           Back to directory
@@ -70,7 +70,7 @@ export default function ProfessionalProfile() {
 
   if (!professional) {
     return (
-      <div className="p-8 flex items-center gap-2 text-ink-500 text-sm">
+      <div className="p-4 md:p-8 flex items-center gap-2 text-ink-500 text-sm">
         <Loader2 className="h-4 w-4 animate-spin" /> Loading professional...
       </div>
     )
@@ -89,7 +89,7 @@ export default function ProfessionalProfile() {
         subtitle={specialtyLabels[professional.type] ?? professional.type}
       />
 
-      <div className="p-8 grid lg:grid-cols-3 gap-6 max-w-5xl">
+      <div className="p-4 md:p-8 grid lg:grid-cols-3 gap-6 max-w-5xl">
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <div className="flex items-center gap-3 mb-4 flex-wrap">

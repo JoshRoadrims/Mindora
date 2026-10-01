@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Loader2, Send, MessageCircle } from 'lucide-react'
+import { Loader2, Send, MessageCircle, ArrowLeft } from 'lucide-react'
 import PageHeader from '../../components/PageHeader.jsx'
 import Card from '../../components/Card.jsx'
 import Button from '../../components/Button.jsx'
@@ -85,7 +85,7 @@ export default function Messages() {
         subtitle="Message professionals you've booked an appointment with, directly and privately."
       />
 
-      <div className="p-8 max-w-5xl">
+      <div className="p-4 md:p-8 max-w-5xl">
         {error && <Card className="text-sm text-red-600 mb-4">{error}</Card>}
 
         {conversations === null && !error && (
@@ -101,8 +101,9 @@ export default function Messages() {
         )}
 
         {conversations && conversations.length > 0 && (
-          <div className="grid md:grid-cols-3 gap-4 h-[560px]">
-            <Card className="p-0 overflow-y-auto md:col-span-1">
+          <div className="grid md:grid-cols-3 gap-4 h-[75vh] md:h-[560px]">
+            {/* Conversation list — full width on mobile when nothing is selected, hidden once a thread is open */}
+            <Card className={`p-0 overflow-y-auto md:col-span-1 ${selectedId ? 'hidden md:block' : ''}`}>
               {conversations.map((c) => (
                 <button
                   key={c.professionalId}
@@ -126,7 +127,8 @@ export default function Messages() {
               ))}
             </Card>
 
-            <Card className="p-0 flex flex-col md:col-span-2 overflow-hidden">
+            {/* Thread — full width on mobile once selected, hidden until then */}
+            <Card className={`p-0 flex-col md:col-span-2 overflow-hidden ${selectedId ? 'flex' : 'hidden md:flex'}`}>
               {!selectedId && (
                 <div className="flex-1 flex items-center justify-center text-ink-400 text-sm gap-2">
                   <MessageCircle className="h-5 w-5" /> Select a conversation
@@ -135,7 +137,14 @@ export default function Messages() {
 
               {selectedId && (
                 <>
-                  <div className="px-4 py-3 border-b border-ink-100">
+                  <div className="px-4 py-3 border-b border-ink-100 flex items-center gap-2">
+                    <button
+                      onClick={() => setSelectedId(null)}
+                      className="md:hidden p-1 -ml-1 rounded-lg hover:bg-ink-50 text-ink-500"
+                      aria-label="Back to conversations"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </button>
                     <p className="font-semibold text-navy-800 text-sm">
                       {selectedConversation?.professionalName}
                     </p>
@@ -150,7 +159,7 @@ export default function Messages() {
                     {messages?.map((m) => (
                       <div key={m.id} className={`flex ${m.senderRole === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div
-                          className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
+                          className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
                             m.senderRole === 'user'
                               ? 'bg-navy-800 text-white rounded-br-sm'
                               : 'bg-ink-100 text-navy-800 rounded-bl-sm'
@@ -171,7 +180,7 @@ export default function Messages() {
                       value={draft}
                       onChange={(e) => setDraft(e.target.value)}
                       placeholder="Type a message..."
-                      className="flex-1 rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+                      className="flex-1 min-w-0 rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
                     />
                     <Button type="submit" variant="accent" disabled={!draft.trim() || sending}>
                       {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

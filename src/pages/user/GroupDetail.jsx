@@ -157,12 +157,12 @@ export default function GroupDetail() {
   }, [messages])
 
   if (error && !data) {
-    return <div className="p-8 text-sm text-red-600">{error}</div>
+    return <div className="p-4 md:p-8 text-sm text-red-600">{error}</div>
   }
 
   if (!data) {
     return (
-      <div className="p-8 flex items-center gap-2 text-ink-500 text-sm">
+      <div className="p-4 md:p-8 flex items-center gap-2 text-ink-500 text-sm">
         <Loader2 className="h-4 w-4 animate-spin" /> Loading group...
       </div>
     )
@@ -215,7 +215,7 @@ export default function GroupDetail() {
     <div>
       <PageHeader eyebrow="Support groups" title={group.title} subtitle={`Facilitated by ${group.facilitatorName}`} />
 
-      <div className="p-8 max-w-2xl space-y-4">
+      <div className="p-4 md:p-8 max-w-2xl space-y-4">
         {showCrisisModal && <CrisisModal onClose={() => setShowCrisisModal(false)} />}
 
         {error && <Card className="text-sm text-red-600">{error}</Card>}
@@ -298,7 +298,7 @@ export default function GroupDetail() {
 
             <CrisisBar substanceUse={group.topic === 'SUBSTANCE_USE'} />
 
-            <Card className="p-0 flex flex-col h-[480px] overflow-hidden">
+            <Card className="p-0 flex flex-col h-[70vh] md:h-[480px] overflow-hidden">
               <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
                 {messages === null && (
                   <div className="flex items-center gap-2 text-ink-400 text-sm">
@@ -307,7 +307,7 @@ export default function GroupDetail() {
                 )}
                 {messages?.map((m) => (
                   <div key={m.id} className={`flex ${m.mine ? 'justify-end' : 'justify-start'}`}>
-                    <div className="max-w-[80%]">
+                    <div className="max-w-[85%] md:max-w-[80%]">
                       <div
                         className={`rounded-2xl px-4 py-2 text-sm ${
                           m.isFacilitator
@@ -360,7 +360,7 @@ export default function GroupDetail() {
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   placeholder="Share with the group..."
-                  className="flex-1 rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+                  className="flex-1 min-w-0 rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
                 />
                 <Button type="submit" variant="accent" disabled={!draft.trim() || sending}>
                   {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

@@ -34,7 +34,7 @@ function LowConcern() {
   return (
     <div>
       <PageHeader eyebrow="Wellbeing check-in" title="Your wellbeing assessment" />
-      <div className="p-8 max-w-2xl mx-auto space-y-6">
+      <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-6">
         <Card className="text-center py-10">
           <div className="mx-auto h-14 w-14 rounded-full bg-teal-50 flex items-center justify-center mb-4">
             <CheckCircle2 className="h-7 w-7 text-teal-600" />
@@ -80,7 +80,7 @@ function ElevatedRisk({ substanceFlag }) {
             : 'Your results suggest additional support may help.'
         }
       />
-      <div className="p-8 max-w-2xl mx-auto space-y-6">
+      <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-6">
         <Card className="text-center py-10 border-amber-200">
           <div className="mx-auto h-14 w-14 rounded-full bg-amber-50 flex items-center justify-center mb-4">
             <AlertTriangle className="h-7 w-7 text-amber-600" />
@@ -134,7 +134,7 @@ function HighRisk() {
   return (
     <div>
       <PageHeader eyebrow="Wellbeing check-in" title="Your results suggest you should speak with a professional soon." />
-      <div className="p-8 max-w-2xl mx-auto space-y-6">
+      <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-6">
         <Card className="text-center py-10 border-orange-200">
           <div className="mx-auto h-14 w-14 rounded-full bg-orange-50 flex items-center justify-center mb-4">
             <ShieldAlert className="h-7 w-7 text-orange-600" />
@@ -181,7 +181,7 @@ function AcuteRisk() {
   return (
     <div>
       <PageHeader eyebrow="Wellbeing check-in" title="Please reach out for support right now." />
-      <div className="p-8 max-w-2xl mx-auto space-y-6">
+      <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-6">
         <Card className="text-center py-10 border-red-200 bg-red-50/40">
           <div className="mx-auto h-14 w-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
             <AlertOctagon className="h-7 w-7 text-red-600" />

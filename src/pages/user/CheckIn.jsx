@@ -33,7 +33,7 @@ export default function CheckIn() {
     <div>
       <PageHeader eyebrow="Wellbeing check-in" title="How have you been feeling lately?" />
 
-      <div className="p-8 max-w-2xl mx-auto">
+      <div className="p-4 md:p-8 max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-2 text-sm text-ink-500">
           <span>
             Progress: {step + 1} of {checkInQuestions.length}
@@ -70,7 +70,7 @@ export default function CheckIn() {
           </div>
         </Card>
 
-        <div className="flex justify-between">
+        <div className="flex justify-between gap-3">
           <Button
             variant="secondary"
             onClick={() => setStep((s) => Math.max(0, s - 1))}
