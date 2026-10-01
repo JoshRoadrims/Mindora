@@ -21,6 +21,8 @@ import MindoraAI from './pages/user/MindoraAI.jsx'
 import Resources from './pages/user/Resources.jsx'
 import UserAppointments from './pages/user/Appointments.jsx'
 import UserMessages from './pages/user/Messages.jsx'
+import Groups from './pages/user/Groups.jsx'
+import GroupDetail from './pages/user/GroupDetail.jsx'
 import UserSettings from './pages/user/Settings.jsx'
 
 // Professional portal
@@ -30,6 +32,8 @@ import ClientView from './pages/professional/ClientView.jsx'
 import Clients from './pages/professional/Clients.jsx'
 import ProAppointments from './pages/professional/Appointments.jsx'
 import ProMessages from './pages/professional/Messages.jsx'
+import ProGroups from './pages/professional/Groups.jsx'
+import ProGroupManage from './pages/professional/GroupManage.jsx'
 import ProAssessments from './pages/professional/Assessments.jsx'
 import FollowUps from './pages/professional/FollowUps.jsx'
 import Reports from './pages/professional/Reports.jsx'
@@ -69,6 +73,8 @@ export default function App() {
         <Route path="resources" element={<Resources />} />
         <Route path="appointments" element={<UserAppointments />} />
         <Route path="messages" element={<UserMessages />} />
+        <Route path="groups" element={<Groups />} />
+        <Route path="groups/:groupId" element={<GroupDetail />} />
         <Route path="settings" element={<UserSettings />} />
       </Route>
 
@@ -81,6 +87,8 @@ export default function App() {
         <Route path="clients/:userId" element={<ClientView />} />
         <Route path="appointments" element={<ProAppointments />} />
         <Route path="messages" element={<ProMessages />} />
+        <Route path="groups" element={<ProGroups />} />
+        <Route path="groups/:groupId" element={<ProGroupManage />} />
         <Route path="assessments" element={<ProAssessments />} />
         <Route path="follow-ups" element={<FollowUps />} />
         <Route path="reports" element={<Reports />} />

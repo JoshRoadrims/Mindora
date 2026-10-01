@@ -214,4 +214,36 @@ export const api = {
   getMessageThread: (otherPartyId) => request(`/api/messages/thread/${otherPartyId}`),
   sendMessage: (otherPartyId, content) =>
     request('/api/messages', { method: 'POST', body: { otherPartyId, content } }),
+
+  // --- Support groups ---
+  listGroups: () => request('/api/groups'),
+  getGroup: (groupId) => request(`/api/groups/${groupId}`),
+  joinGroup: (groupId, ageConfirmed, consentAccepted) =>
+    request(`/api/groups/${groupId}/join`, { method: 'POST', body: { ageConfirmed, consentAccepted } }),
+  leaveGroup: (groupId) => request(`/api/groups/${groupId}/membership`, { method: 'DELETE' }),
+  getGroupMessages: (groupId) => request(`/api/groups/${groupId}/messages`),
+  sendGroupMessage: (groupId, content) =>
+    request(`/api/groups/${groupId}/messages`, { method: 'POST', body: { content } }),
+  reportGroupMessage: (messageId, reason) =>
+    request(`/api/groups/messages/${messageId}/report`, { method: 'POST', body: { reason } }),
+
+  // --- Support groups (facilitator) ---
+  listMyGroups: () => request('/api/groups/facilitating'),
+  createGroup: (payload) => request('/api/groups', { method: 'POST', body: payload }),
+  updateGroup: (groupId, payload) => request(`/api/groups/${groupId}`, { method: 'PATCH', body: payload }),
+  getGroupRoster: (groupId) => request(`/api/groups/${groupId}/roster`),
+  approveGroupMember: (groupId, membershipId) =>
+    request(`/api/groups/${groupId}/members/${membershipId}/approve`, { method: 'POST' }),
+  declineGroupMember: (groupId, membershipId) =>
+    request(`/api/groups/${groupId}/members/${membershipId}/decline`, { method: 'POST' }),
+  removeGroupMember: (groupId, membershipId) =>
+    request(`/api/groups/${groupId}/members/${membershipId}/remove`, { method: 'POST' }),
+  hideGroupMessage: (groupId, messageId) =>
+    request(`/api/groups/${groupId}/messages/${messageId}/hide`, { method: 'POST' }),
+  unhideGroupMessage: (groupId, messageId) =>
+    request(`/api/groups/${groupId}/messages/${messageId}/unhide`, { method: 'POST' }),
+  clearGroupMessageFlag: (groupId, messageId) =>
+    request(`/api/groups/${groupId}/messages/${messageId}/clear-flag`, { method: 'POST' }),
+  getGroupReports: (groupId) => request(`/api/groups/${groupId}/reports`),
+  resolveGroupReport: (reportId) => request(`/api/groups/reports/${reportId}/resolve`, { method: 'POST' }),
 }
