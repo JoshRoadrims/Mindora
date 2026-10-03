@@ -259,4 +259,16 @@ export const api = {
 
   // --- Payouts (professional's own) ---
   getMyPayouts: () => request('/api/payments/payouts/mine'),
+
+  // --- Student Rate ---
+  submitStudentRateEmail: (evidence) =>
+    request('/api/student-rate/verify', { method: 'POST', body: { method: 'STUDENT_EMAIL', evidence } }),
+  submitStudentRateId: (file) => uploadFile('/api/student-rate/verify', file, { method: 'YOUNG_ADULT_ID' }),
+  getStudentRateStatus: () => request('/api/student-rate/status'),
+
+  // --- Student Rate (admin) ---
+  adminListStudentRateVerifications: () => request('/api/student-rate/verifications'),
+  adminReviewStudentRateVerification: (id, status, reviewNotes) =>
+    request(`/api/student-rate/verifications/${id}/review`, { method: 'PATCH', body: { status, reviewNotes } }),
+  getStudentRateVerificationFileBlob: (id) => fetchFileBlob(`/api/student-rate/verifications/${id}/file`),
 }

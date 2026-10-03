@@ -14,6 +14,8 @@ const docTypes = [
   { value: 'OTHER', label: 'Other supporting document' },
 ]
 
+const STUDENT_RATE_FEE_CAP_KES = 2000
+
 function docStatusTone(status) {
   if (status === 'APPROVED') return 'teal'
   if (status === 'REJECTED') return 'acute'
@@ -34,6 +36,8 @@ const emptyProfileForm = {
   yearsExperience: 0,
   location: '',
   feeKes: 0,
+  studentRateFeeKes: '',
+  supervisorName: '',
   onlineAvailable: true,
   inPersonAvailable: false,
 }
@@ -43,6 +47,7 @@ export default function Settings() {
   const [profileForm, setProfileForm] = useState(emptyProfileForm)
   const [savingProfile, setSavingProfile] = useState(false)
   const [profileSaved, setProfileSaved] = useState(false)
+  const [profileError, setProfileError] = useState(null)
 
   const [documents, setDocuments] = useState(null)
   const [error, setError] = useState(null)
@@ -69,6 +74,8 @@ export default function Settings() {
           yearsExperience: p.yearsExperience ?? 0,
           location: p.location ?? '',
           feeKes: p.feeKes ?? 0,
+          studentRateFeeKes: p.studentRateFeeKes != null ? String(p.studentRateFeeKes) : '',
+          supervisorName: p.supervisorName ?? '',
           onlineAvailable: p.onlineAvailable ?? true,
           inPersonAvailable: p.inPersonAvailable ?? false,
         })
@@ -98,7 +105,17 @@ export default function Settings() {
     e.preventDefault()
     setSavingProfile(true)
     setProfileSaved(false)
-    setError(null)
+    setProfileError(null)
+
+    const studentRateFeeKesValue =
+      profileForm.studentRateFeeKes === '' ? null : Number(profileForm.studentRateFeeKes)
+
+    if (studentRateFeeKesValue !== null && studentRateFeeKesValue > STUDENT_RATE_FEE_CAP_KES) {
+      setProfileError(`Student Rate fee can't be more than KES ${STUDENT_RATE_FEE_CAP_KES.toLocaleString()}.`)
+      setSavingProfile(false)
+      return
+    }
+
     try {
       const payload = {
         bio: profileForm.bio,
@@ -117,6 +134,8 @@ export default function Settings() {
         yearsExperience: Number(profileForm.yearsExperience),
         location: profileForm.location,
         feeKes: Number(profileForm.feeKes),
+        studentRateFeeKes: studentRateFeeKesValue,
+        supervisorName: profileForm.supervisorName === '' ? null : profileForm.supervisorName,
         onlineAvailable: profileForm.onlineAvailable,
         inPersonAvailable: profileForm.inPersonAvailable,
       }
@@ -125,7 +144,7 @@ export default function Settings() {
       setTimeout(() => setProfileSaved(false), 3000)
       loadProfile()
     } catch (err) {
-      setError(err.message)
+      setProfileError(err.message)
     } finally {
       setSavingProfile(false)
     }
@@ -282,6 +301,37 @@ export default function Settings() {
               </div>
 
               <div>
+                <label className="text-xs text-ink-500 block mb-1">
+                  Student Rate fee <span className="text-ink-400">(optional, max KES {STUDENT_RATE_FEE_CAP_KES.toLocaleString()})</span>
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={STUDENT_RATE_FEE_CAP_KES}
+                  value={profileForm.studentRateFeeKes}
+                  onChange={(e) => setProfileForm({ ...profileForm, studentRateFeeKes: e.target.value })}
+                  placeholder="Leave blank to not offer this rate"
+                  className="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+                />
+                <p className="text-xs text-ink-400 mt-1">
+                  A discounted rate for verified students and young adults (18–25). Mindora takes 25%
+                  on these bookings instead of the usual 35%.
+                </p>
+              </div>
+
+              <div>
+                <label className="text-xs text-ink-500 block mb-1">
+                  Supervisor name <span className="text-ink-400">(optional, for interns)</span>
+                </label>
+                <input
+                  value={profileForm.supervisorName}
+                  onChange={(e) => setProfileForm({ ...profileForm, supervisorName: e.target.value })}
+                  placeholder="Dr. Jane Mwangi"
+                  className="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none"
+                />
+              </div>
+
+              <div>
                 <label className="text-xs text-ink-500 block mb-1">Location</label>
                 <input
                   value={profileForm.location}
@@ -309,6 +359,8 @@ export default function Settings() {
                   In-person sessions
                 </label>
               </div>
+
+              {profileError && <p className="text-sm text-red-600">{profileError}</p>}
 
               <Button type="submit" variant="accent" disabled={savingProfile}>
                 {savingProfile ? (

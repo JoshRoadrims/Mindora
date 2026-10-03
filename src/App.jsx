@@ -23,6 +23,7 @@ import UserAppointments from './pages/user/Appointments.jsx'
 import UserMessages from './pages/user/Messages.jsx'
 import Groups from './pages/user/Groups.jsx'
 import GroupDetail from './pages/user/GroupDetail.jsx'
+import StudentRate from './pages/user/StudentRate.jsx'
 import UserSettings from './pages/user/Settings.jsx'
 
 // Professional portal
@@ -49,6 +50,7 @@ import AdminAppointments from './pages/admin/Appointments.jsx'
 import Safety from './pages/admin/Safety.jsx'
 import Analytics from './pages/admin/Analytics.jsx'
 import Payouts from './pages/admin/Payouts.jsx'
+import StudentRateReview from './pages/admin/StudentRateReview.jsx'
 import Institutions from './pages/admin/Institutions.jsx'
 import DeletionRequests from './pages/admin/DeletionRequests.jsx'
 import AdminSettings from './pages/admin/Settings.jsx'
@@ -77,6 +79,7 @@ export default function App() {
         <Route path="messages" element={<UserMessages />} />
         <Route path="groups" element={<Groups />} />
         <Route path="groups/:groupId" element={<GroupDetail />} />
+        <Route path="student-rate" element={<StudentRate />} />
         <Route path="settings" element={<UserSettings />} />
       </Route>
 
@@ -108,6 +111,7 @@ export default function App() {
         <Route path="safety" element={<Safety />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="payouts" element={<Payouts />} />
+        <Route path="student-rate" element={<StudentRateReview />} />
         <Route path="institutions" element={<Institutions />} />
         <Route path="deletion-requests" element={<DeletionRequests />} />
         <Route path="settings" element={<AdminSettings />} />
