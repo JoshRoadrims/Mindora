@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo, useState, useCallback } from 'react'
 import { api, setToken, setRefreshToken, getRefreshToken, clearSession, getToken } from './api.js'
-import { checkInQuestions } from './mockData.js'
+import { SCREENING_QUESTIONS } from './screening.js'
 
 const AppStateContext = createContext(null)
 
@@ -124,9 +124,13 @@ export function AppStateProvider({ children }) {
     }
   }, [])
 
+  // answersById: { [questionId]: numericValue } — keyed by the new
+  // screening.js question ids (phq9_1, gad7_1, cageaid_1, ...). domain is
+  // the instrument (PHQ9/GAD7/CAGEAID), matching what checkin.routes.js
+  // now expects for scoring.
   const submitCheckIn = useCallback(async (answersById) => {
-    const answers = checkInQuestions.map((q) => ({
-      domain: q.id,
+    const answers = SCREENING_QUESTIONS.map((q) => ({
+      domain: q.domain,
       questionId: q.id,
       value: answersById[q.id],
     }))
